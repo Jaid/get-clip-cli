@@ -1,1 +1,57 @@
-{"webpackConfigJaid":"cli","version":"0.1.0","author":"Jaid <jaid.jsx@gmail.com> (https://github.com/Jaid)","dependencies":{"yargs":"^16.0.3"},"devDependencies":{"acorn":"^8.0.3","babel-jest":"^26.5.2","babel-preset-jaid":"^9.0.0","browserslist-config-jaid-node":"^3.0.0","caniuse-lite":"^1.0.30001144","coffee":"^5.4.0","eslint":"^7.10.0","eslint-config-jaid":"^1.49.0","jest":"^26.5.2","rimraf":"^3.0.2","tsconfig-jaid":"^2.1.0","webpack":"^4.44.2","webpack-config-jaid":"^11.13.0"},"scripts":{"clean":"rimraf dist/","build:prod":"NODE_ENV=production webpack","build:dev":"NODE_ENV=development webpack","test":"npm run build:prod && NODE_ENV=production MAIN=dist/package/production/cli.js jest","test:coverage":"npm run test:dev -- --coverage --json --outputFile=dist/jest/stats.json","test:dev":"npm run build:dev && NODE_ENV=test MAIN=dist/package/development/cli.js jest","test:debug":"DEBUG=\"$(basename $PWD),$(basename $PWD):*\" NODE_ENV=test node --inspect=9229 node_modules/jest/bin/jest.js --runInBand --detectOpenHandles","prepareActionJest":"npm run build:prod","start":"npm run build:dev && NODE_ENV=development node dist/package/development/cli.js"},"name":"get-clip-cli","description":"Download Twitch clips.","funding":"https://github.com/sponsors/jaid","repository":{"type":"git","url":"https://github.com/jaid/get-clip-cli"},"homepage":"https://github.com/Jaid/get-clip-cli","keywords":["boilerplate","cli","date","moment","node","node-js","nodejs","now","print","tool","util","utility","year"]}
+{
+  "webpackConfigJaid": "cli",
+  "version": "0.1.0",
+  "author": "Jaid <jaid.jsx@gmail.com> (https://github.com/Jaid)",
+  "dependencies": {
+    "yargs": "^16.0.3"
+  },
+  "devDependencies": {
+    "acorn": "^8.0.3",
+    "babel-jest": "^26.5.2",
+    "babel-preset-jaid": "^9.0.0",
+    "browserslist-config-jaid-node": "^3.0.0",
+    "caniuse-lite": "^1.0.30001144",
+    "coffee": "^5.4.0",
+    "eslint": "^7.10.0",
+    "eslint-config-jaid": "^1.49.0",
+    "jest": "^26.5.2",
+    "rimraf": "^3.0.2",
+    "tsconfig-jaid": "^2.1.0",
+    "webpack": "^4.44.2",
+    "webpack-config-jaid": "^11.13.0"
+  },
+  "scripts": {
+    "clean": "rimraf dist/",
+    "build:prod": "NODE_ENV=production webpack",
+    "build:dev": "NODE_ENV=development webpack",
+    "test": "npm run build:prod && NODE_ENV=production MAIN=dist/package/production/cli.js jest",
+    "test:coverage": "npm run test:dev -- --coverage --json --outputFile=dist/jest/stats.json",
+    "test:dev": "npm run build:dev && NODE_ENV=test MAIN=dist/package/development/cli.js jest",
+    "test:debug": "DEBUG=\"$(basename $PWD),$(basename $PWD):*\" NODE_ENV=test node --inspect=9229 node_modules/jest/bin/jest.js --runInBand --detectOpenHandles",
+    "prepareActionJest": "npm run build:prod",
+    "start": "npm run build:dev && NODE_ENV=development node dist/package/development/cli.js"
+  },
+  "name": "get-clip-cli",
+  "description": "Download Twitch clips.",
+  "funding": "https://github.com/sponsors/jaid",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jaid/get-clip-cli"
+  },
+  "homepage": "https://github.com/Jaid/get-clip-cli",
+  "keywords": [
+    "boilerplate",
+    "cli",
+    "date",
+    "moment",
+    "node",
+    "node-js",
+    "nodejs",
+    "now",
+    "print",
+    "tool",
+    "util",
+    "utility",
+    "year"
+  ]
+}
