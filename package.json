@@ -32,7 +32,7 @@
     "start": "npm run build:dev && NODE_ENV=development node dist/package/development/cli.js"
   },
   "name": "get-clip-cli",
-  "description": "Download Twitch clips.",
+  "description": "CLI that downloads Twitch content.",
   "funding": "https://github.com/sponsors/jaid",
   "repository": {
     "type": "git",
@@ -40,18 +40,14 @@
   },
   "homepage": "https://github.com/Jaid/get-clip-cli",
   "keywords": [
-    "boilerplate",
     "cli",
-    "date",
-    "moment",
     "node",
     "node-js",
     "nodejs",
-    "now",
-    "print",
     "tool",
     "util",
     "utility",
-    "year"
+    "twitch",
+    "youtube"
   ]
 }
