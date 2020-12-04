@@ -2,7 +2,7 @@ import essentialConfig from "essential-config"
 
 import logger from "lib/logger"
 
-const defaultConfig = {
+const defaults = {
   ffmpegPath: "E:/Binaries/ffmpeg.exe",
   ffprobePath: "E:/Binaries/ffprobe.exe",
   youtubeDlPath: "E:/Binaries/youtube-dl.exe",
@@ -10,11 +10,11 @@ const defaultConfig = {
   storageDirectory: "S:/Clips",
 }
 
-const config = essentialConfig(process.env.REPLACE_PKG_TITLE, defaultConfig)
+const config = essentialConfig(process.env.REPLACE_PKG_TITLE, {defaults})
 
 if (!config) {
   logger.warn("Set up default config, please review and edit this file")
 }
 
 export const appFolder = config.appFolder
-export default config.config || defaultConfig
+export default config.config || defaults
