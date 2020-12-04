@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "author": "Jaid <jaid.jsx@gmail.com> (https://github.com/Jaid)",
   "dependencies": {
+    "essential-config": "^4.0.2",
+    "jaid-logger": "^2.2.0",
     "yargs": "^16.1.0"
   },
   "devDependencies": {
