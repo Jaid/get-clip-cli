@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "author": "Jaid <jaid.jsx@gmail.com> (https://github.com/Jaid)",
   "dependencies": {
+    "@absolunet/fsp": "^1.6.2",
     "essential-config": "^4.0.2",
     "execa": "^5.0.0",
+    "filenamify-shrink": "^1.0.0",
     "jaid-logger": "^2.2.0",
     "readable-ms": "^2.0.4",
     "twitch": "^4.3.2",

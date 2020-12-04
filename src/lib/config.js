@@ -10,7 +10,10 @@ const defaults = {
   storageDirectory: "S:/Clips",
 }
 
-const config = essentialConfig(process.env.REPLACE_PKG_TITLE, {defaults})
+const config = essentialConfig(process.env.REPLACE_PKG_TITLE, {
+  defaults,
+  secretKeys: ["twitchClientId", "twitchClientSecret"],
+})
 
 if (!config) {
   logger.warn("Set up default config, please review and edit this file")
