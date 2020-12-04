@@ -1,13 +1,16 @@
 import yargs from "yargs"
 
 import config from "lib/config"
-import logger from "lib/logger"
 
 import handleDefaultCommand from "src/commands"
 
 /**
  * @typedef {Object} Options
- * @prop {boolean} newline
+ * @prop {string} ffmpegPath
+ * @prop {string} ffprobePath
+ * @prop {string} youtubeDlPath
+ * @prop {string} autosubPath
+ * @prop {string} storageDirectory
  */
 
 /**
