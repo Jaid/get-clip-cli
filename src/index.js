@@ -47,5 +47,5 @@ const commandBuilder = {
 yargs
   .scriptName(process.env.REPLACE_PKG_NAME)
   .version(process.env.REPLACE_PKG_VERSION)
-  .command("* <url>", process.env.REPLACE_PKG_DESCRIPTION, commandBuilder, handleDefaultCommand)
+  .command("* [url]", process.env.REPLACE_PKG_DESCRIPTION, commandBuilder, handleDefaultCommand)
   .parse()
