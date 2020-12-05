@@ -16,9 +16,6 @@ export default async argv => {
   argv.url = "https://www.twitch.tv/sullimain/clip/OnerousObservantStapleTBTacoLeft?filter=clips&range=7d&sort=time"
   const targetUrl = new TargetUrl(argv.url)
   if (targetUrl.type === "twitchClip") {
-    const youtubeDl = new YouTubeDlCommand({url: `https://twitch.tv/clip/${targetUrl.clipId}`})
-    const cmd = youtubeDl.buildCommand()
-    // await runCommand(argv.youtubeDlPath, cmd)
     console.log(config)
     const authProvider = new ClientCredentialsAuthProvider(config.twitchClientId, config.twitchClientSecret)
     const apiClient = new ApiClient({authProvider})
@@ -35,9 +32,16 @@ export default async argv => {
       language: clipResponse.language,
       thumbnailUrl: clipResponse.thumbnailUrl,
       videoId: clipResponse.videoId,
+      url: clipResponse.url,
     }
-    const folder = path.join(argv.storageDirectory, "twitch", clipData.streamerId, "clips", clipData.titleNormalized)
+    const folder = path.join(argv.storageDirectory, "twitch", clipData.streamerId, "clips", clipData.id)
     const clipDataFile = path.join(folder, "apiData.yml")
     await fsp.outputYaml(clipDataFile, clipData)
+    const youtubeDl = new YouTubeDlCommand({
+      url: clipData.url,
+      outputFile: path.join(folder, `${clipData.titleNormalized}.%(ext)s`),
+      writeInfoJson: true,
+    })
+    await runCommand(argv.youtubeDlPath, youtubeDl.buildCommand())
   }
 }
