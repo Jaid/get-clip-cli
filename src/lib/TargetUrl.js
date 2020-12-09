@@ -7,7 +7,7 @@ const twitchHost = ["twitch.tv", "www.twitch.tv"]
 export default class {
 
   /**
-   * @type {URL}
+   * @type {Url}
    */
   url = null
 
@@ -17,19 +17,24 @@ export default class {
   props = {}
 
   /**
-   * @type {"twitchClip"|null}
+   * @type {"twitchClip"|"twitchVideo"|null}
    */
   type = null
 
   constructor(url) {
     this.url = new Url(url)
-    if (twitchHost.includes(this.url.hostname) && this.url.pathSegments.length > 2 && this.url.pathSegments[1] === "clip") {
+    const isTwitch = twitchHost.includes(this.url.hostname)
+    if (isTwitch && this.url.pathSegments.length > 2 && this.url.pathSegments[1] === "clip") {
       this.type = "twitchClip"
-      this.clipId = this.url.pathSegments[2]
+      this.clipSlug = this.url.pathSegments[2]
     }
-    if (twitchHost.includes(this.url.hostname) && this.url.pathSegments.length > 1 && this.url.pathSegments[0] === "clip") {
+    if (isTwitch && this.url.pathSegments.length > 1 && this.url.pathSegments[0] === "clip") {
       this.type = "twitchClip"
-      this.clipId = this.url.pathSegments[1]
+      this.clipSlug = this.url.pathSegments[1]
+    }
+    if (isTwitch && this.url.pathSegments.length > 1 && this.url.pathSegments[0] === "videos") {
+      this.type = "twitchVideo"
+      this.videoId = this.url.pathSegments[1]
     }
   }
 

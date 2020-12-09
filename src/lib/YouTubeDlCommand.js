@@ -1,5 +1,5 @@
 /**
- * @typedef {object} Options
+ * @typedef {object} CommandOptions
  * @prop {string} url
  * @prop {string} [outputFile]
  * @prop {boolean} [writeInfoJson]
@@ -19,20 +19,34 @@
  * @prop {string} [postprocessorArgs]
  */
 
-export default class {
+import {omit} from "lodash"
+
+import Command from "./Command"
+
+export default class extends Command {
 
   /**
-   * @param {Options} options
+   * @type {CommandOptions} options
+   */
+  commandOptions = null
+
+  /**
+   * @param {CommandOptions & import("lib/Command").Options} options
    */
   constructor(options) {
-    this.options = options
+    super(options)
+    this.commandOptions = omit(options, "executablePath")
   }
 
   /**
-   * @param {Options} options?
+   * @param {CommandOptions} additionalOptions?
    * @return {string[]}
    */
-  buildCommand(options = this.options) {
+  buildArguments(additionalOptions) {
+    const options = {
+      ...this.commandOptions,
+      ...additionalOptions,
+    }
     const commandArgs = []
     commandArgs.push(options.url)
     if (options.outputFile) {
@@ -93,17 +107,6 @@ export default class {
       commandArgs.push(options.postprocessorArgs)
     }
     return commandArgs
-  }
-
-  /**
-   * @param {string} outputFile
-   * @return {string[]}
-   */
-  buildInfoCommand(outputFile) {
-    return this.buildCommand({
-      ...this.options,
-      outputFile,
-    })
   }
 
 }
