@@ -10,6 +10,7 @@
     "filenamify-shrink": "^1.0.0",
     "globby": "^11.0.1",
     "jaid-logger": "^2.2.0",
+    "match-array": "^1.0.0",
     "read-file-json": "^1.0.2",
     "readable-ms": "^2.0.4",
     "twitch": "^4.3.2",
