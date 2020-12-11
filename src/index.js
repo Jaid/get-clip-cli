@@ -3,6 +3,7 @@ import yargs from "yargs"
 import config from "lib/config"
 
 import handleDefaultCommand from "src/commands"
+import handleInfoCommand from "src/commands/info"
 
 /**
  * @typedef {Object} Options
@@ -48,4 +49,5 @@ yargs
   .scriptName(process.env.REPLACE_PKG_NAME)
   .version(process.env.REPLACE_PKG_VERSION)
   .command("* [url]", process.env.REPLACE_PKG_DESCRIPTION, commandBuilder, handleDefaultCommand)
+  .command("info", "Show versions and info about external tools", commandBuilder, handleInfoCommand)
   .parse()
