@@ -1,13 +1,14 @@
 /**
  * @typedef {object} CommandOptions
- * @prop {string} url
  * @prop {string} inputFile
  * @prop {string} [outputFile]
  * @prop {"ass"|"ass.json"|"json"|"mpl"|"srt"|"ssa"|"sub"|"tmp"|"txt"|"vtt"} [format]
  * @prop {string} [speechLanguage]
+ * @prop {string|string[]} [additionalOutputFiles]
  */
 
 import {omit} from "lodash"
+import sureArray from "sure-array"
 
 import Command from "./Command"
 
@@ -36,7 +37,6 @@ export default class extends Command {
       ...additionalOptions,
     }
     const commandArgs = ["--yes"]
-    commandArgs.push(options.url)
     if (options.inputFile) {
       commandArgs.push("--input")
       commandArgs.push(options.inputFile)
@@ -52,6 +52,14 @@ export default class extends Command {
     if (options.outputFile) {
       commandArgs.push("--output")
       commandArgs.push(options.outputFile)
+    }
+    if (options.additionalOutputFiles) {
+      commandArgs.push("--output-files")
+      commandArgs.push("dst")
+      const formats = sureArray(options.additionalOutputFiles)
+      for (const format of formats) {
+        commandArgs.push(format)
+      }
     }
     return commandArgs
   }

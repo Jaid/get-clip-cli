@@ -7,11 +7,13 @@ import handleInfoCommand from "src/commands/info"
 
 /**
  * @typedef {Object} Options
+ * @prop {string} url
  * @prop {string} ffmpegPath
  * @prop {string} ffprobePath
  * @prop {string} youtubeDlPath
  * @prop {string} autosubPath
  * @prop {string} storageDirectory
+ * @prop {string} autosubLanguage
  */
 
 /**
@@ -42,6 +44,11 @@ const commandBuilder = {
     description: "Path to a directory for large storage",
     type: "string",
     default: config.storageDirectory,
+  },
+  "autosub-language": {
+    description: "Lanuage code of the language spoken in the clip",
+    type: "string",
+    default: "de-de",
   },
 }
 
