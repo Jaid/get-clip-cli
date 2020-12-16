@@ -8,6 +8,10 @@ import {ClientCredentialsAuthProvider} from "twitch-auth"
 
 import AutosubCommand from "lib/AutosubCommand"
 import config from "lib/config"
+import FfmpegAv1 from "lib/FfmpegAv1"
+import FfmpegCommand from "lib/FfmpegCommand"
+import FfmpegHevc from "lib/FfmpegHevc"
+import FfmpegOpus from "lib/FfmpegOpus"
 import logger from "lib/logger"
 import YouTubeDlCommand from "lib/YouTubeDlCommand"
 
@@ -83,6 +87,24 @@ export default class extends Handler {
     await fs.copyFile(tempSrtFile, srtFile)
     // @ts-ignore
     await fs.copyFile(tempAutosubSourceFile, autosubSourceFile)
+    const ffmpegOutputFile = path.join(folder, "archive.mkv")
+    const videoEncoder = new FfmpegHevc({
+      preset: "slow",
+    })
+    const audioEncoder = new FfmpegOpus({
+      bitrate: "64k",
+      frameDuration: 60,
+      vbr: true,
+    })
+    const ffmpeg = new FfmpegCommand({
+      videoEncoder,
+      audioEncoder,
+      executablePath: this.argv.ffmpegPath,
+      inputFile: downloadedFile,
+      outputFile: ffmpegOutputFile,
+      hwAccel: "auto",
+    })
+    await ffmpeg.run()
   }
 
 }

@@ -1,0 +1,59 @@
+import FfmpegVideoEncoder from "./FfmpegVideoEncoder"
+
+/**
+ * @typedef {object} Options
+ * @prop {string} [cpuUsed] Lower values mean slower encoding with better quality
+ * @prop {string} [tiles]
+ * @prop {boolean} [rowMt]
+ * @prop {number} [quality] 0 best, 63 worst
+ */
+
+export default class extends FfmpegVideoEncoder {
+
+  /**
+   * @type {Options} options
+   */
+  options = null
+
+  /**
+   * @param {Options} [options]
+   */
+  constructor(options) {
+    super()
+    this.options = options || {}
+  }
+
+  /**
+   * @return {string[]}
+   */
+  toArgs() {
+    const args = super.toArgs()
+    args.push("libaom-av1")
+    args.push("-strict")
+    args.push("experimental")
+    if (this.options.cpuUsed) {
+      args.push("-cpu-used")
+      args.push(this.options.cpuUsed)
+    }
+    if (this.options.rowMt === true) {
+      args.push("-row-mt")
+      args.push("1")
+    }
+    if (this.options.rowMt === false) {
+      args.push("-row-mt")
+      args.push("0")
+    }
+    if (this.options.tiles) {
+      args.push("-tiles")
+      args.push(this.options.tiles)
+    }
+    if (this.options.quality) {
+      args.push("-crf")
+      args.push(String(this.options.quality))
+      args.push("-b:v")
+      args.push("0")
+    }
+    return args
+  }
+
+}

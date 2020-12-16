@@ -7,6 +7,14 @@ const tools = {
   ffmpeg: {
     extractVersion: /version (?<version>.+?) /,
     commandArguments: ["-version"],
+    bonusHandler: async argv => {
+      const listAccelsResult = await execa(argv.ffmpegPath, ["-hwaccels"])
+      const relevantContent = /Hardware acceleration methods:(?<content>.*)/s.exec(listAccelsResult.stdout).groups.content
+      const accelsResult = matchArray(/\n(?<code>[\da-z]+)/g, relevantContent)
+      return {
+        Accels: accelsResult.map(entry => entry.code).join(", "),
+      }
+    },
   },
   ffprobe: {
     commandArguments: ["-version"],

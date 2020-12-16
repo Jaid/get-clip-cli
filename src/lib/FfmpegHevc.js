@@ -1,0 +1,41 @@
+import FfmpegVideoEncoder from "./FfmpegVideoEncoder"
+
+/**
+ * @typedef {object} Options
+ * @prop {string} [preset]
+ * @prop {number} [quality]
+ */
+
+export default class extends FfmpegVideoEncoder {
+
+  /**
+   * @type {Options} options
+   */
+  options = null
+
+  /**
+   * @param {Options} [options]
+   */
+  constructor(options) {
+    super()
+    this.options = options || {}
+  }
+
+  /**
+   * @return {string[]}
+   */
+  toArgs() {
+    const args = super.toArgs()
+    args.push("libx265")
+    if (this.options.preset) {
+      args.push("-preset")
+      args.push(this.options.preset)
+    }
+    if (this.options.quality) {
+      args.push("-quality")
+      args.push(String(this.options.quality))
+    }
+    return args
+  }
+
+}
