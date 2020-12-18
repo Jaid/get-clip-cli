@@ -8,6 +8,10 @@ import {ApiClient} from "twitch"
 import {ClientCredentialsAuthProvider} from "twitch-auth"
 
 import config from "lib/config"
+import FfmpegAac from "lib/FfmpegAac"
+import FfmpegCommand from "lib/FfmpegCommand"
+import FfmpegHevc from "lib/FfmpegHevc"
+import FfmpegOpus from "lib/FfmpegOpus"
 import logger from "lib/logger"
 import secondsToHms from "lib/secondsToHms"
 import TargetUrl from "lib/TargetUrl"
@@ -121,6 +125,18 @@ export default class extends Handler {
     meta.clip = clipData
     meta.youtubeDl = youtubeDlData
     meta.ffprobe = ffprobeData
+    const ffmpegOutputFile = path.join(folder, "archive.mp4")
+    const videoEncoder = new FfmpegHevc
+    const audioEncoder = new FfmpegAac
+    const ffmpeg = new FfmpegCommand({
+      videoEncoder,
+      audioEncoder,
+      executablePath: this.argv.ffmpegPath,
+      inputFile: downloadedFile,
+      outputFile: ffmpegOutputFile,
+      hwAccel: "auto",
+    })
+    await ffmpeg.run()
     await fsp.outputYaml(clipDataFile, meta)
   }
 

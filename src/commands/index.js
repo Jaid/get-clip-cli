@@ -7,8 +7,8 @@ const handlerMap = {
   twitchClip: TwitchClip,
 }
 
-// const testUrl = "https://clips.twitch.tv/SassyAgreeableRutabagaDancingBanana" Lea
-const testUrl = "https://www.twitch.tv/jaidchen/clip/FrailPreciousSalmonSaltBae"
+// const testUrl = "https://clips.twitch.tv/SassyAgreeableRutabagaDancingBanana" // Lea Diable
+const testUrl = "https://www.twitch.tv/jaidchen/clip/FrailPreciousSalmonSaltBae" // Jaidchen Testi
 
 /**
  * @param {import("yargs").Arguments<import("src").Options>} argv

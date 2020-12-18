@@ -2,10 +2,10 @@ import FfmpegAudioEncoder from "./FfmpegAudioEncoder"
 
 /**
  * @typedef {object} Options
- * @prop {string} [bitrate]
- * @prop {boolean} [vbr]
+ * @prop {string} [bitrate="64k"]
+ * @prop {boolean} [vbr=true]
  * @prop {number} [compressionLevel]
- * @prop {number} [frameDuration]
+ * @prop {number} [frameDuration=60]
  * @prop {"voip"|"audio"|"lowdelay"} [application]
  */
 
@@ -21,7 +21,12 @@ export default class extends FfmpegAudioEncoder {
    */
   constructor(options) {
     super()
-    this.options = options || {}
+    this.options = {
+      bitrate: "64k",
+      vbr: true,
+      compressionLevel: 10,
+      ...options,
+    }
   }
 
   /**

@@ -5,13 +5,13 @@
  * @prop {string} outputFile
  * @prop {"quiet"|"panic"|"fatal"|"error"|"warning"|"info"|"verbose"|"debug"|"trace"} [logLevel]
  * @prop {"none"|"auto"|"vdpau"|"dxva2"|"vaapi"|"qsv"} [hwAccel]
- * @prop {import("lib/FfmpegVideoEncoder").default} [videoEncoder]
- * @prop {import("lib/FfmpegAudioEncoder").default} [audioEncoder]
+ * @prop {import("./FfmpegVideoEncoder").default} [videoEncoder]
+ * @prop {import("./FfmpegAudioEncoder").default} [audioEncoder]
  */
 
 import {omit} from "lodash"
 
-import Command from "./Command"
+import Command from "src/lib/Command"
 
 export default class extends Command {
 
