@@ -13,6 +13,7 @@ const getFolderSize = pify(require("get-folder-size"))
 export default async argv => {
   const startTime = Date.now()
   const size = await getFolderSize(argv.storageDirectory)
+  logger.debug(`Size: ${prettyBytes(size)}`)
   await fs.emptyDir(argv.storageDirectory)
   const newSize = await getFolderSize(argv.storageDirectory)
   logger.info(`Removed ${prettyBytes(size - newSize)} from ${argv.storageDirectory}`)
