@@ -22,7 +22,7 @@ import FfmpegAudioCopy from "src/packages/ffmpeg-args/src/FfmpegAudioCopy"
 import FfmpegHevc from "src/packages/ffmpeg-args/src/FfmpegHevc"
 import TwitchVideo from "src/platforms/TwitchVideo"
 
-import Platformm from "."
+import Platform from "."
 
 /**
  * @typedef {object} KrakenVod
@@ -73,7 +73,7 @@ function getClipIdFromThumbnailUrl(url) {
   return regex.exec(url).groups.id
 }
 
-export default class extends Platformm {
+export default class extends Platform {
 
   /**
    * @type {string}
