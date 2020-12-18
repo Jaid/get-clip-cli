@@ -3,6 +3,7 @@ import findByExtension from "find-by-extension"
 import fs from "fs/promises"
 import globby from "globby"
 import path from "path"
+import readableMs from "readable-ms"
 import tempy from "tempy"
 import {ApiClient} from "twitch"
 import {ClientCredentialsAuthProvider} from "twitch-auth"
@@ -204,6 +205,7 @@ export default class extends Platform {
       ownerTitle: this.helixVideo.userDisplayName,
       id: this.helixVideo.id,
     }
+    logger.info(`Video: ${this.videoData.title} (${readableMs(this.videoData.duration)})`)
     const ownerName = this.videoData.ownerTitle.toLowerCase()
     this.folder = path.join(this.argv.storageDirectory, "twitch", ownerName, "videos", this.videoData.id)
     await this.download()

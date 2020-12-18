@@ -4,6 +4,7 @@ import {outputFile} from "fs-extra"
 import globby from "globby"
 import path from "path"
 import readFileJson from "read-file-json"
+import readableMs from "readable-ms"
 import {ApiClient} from "twitch"
 import {ClientCredentialsAuthProvider} from "twitch-auth"
 
@@ -117,12 +118,11 @@ export default class extends Platformm {
   probe = null
 
   /**
-   * @param {string} url
    * @return {Promise<void>}
    */
-  async download(url) {
+  async download() {
     const youtubeDl = new YouTubeDlCommand({
-      url,
+      url: this.clipData.url,
       executablePath: this.argv.youtubeDlPath,
       outputFile: path.join(this.folder, "download.%(ext)s"),
       writeInfoJson: true,
@@ -186,11 +186,15 @@ export default class extends Platformm {
     this.meta = {}
     const authProvider = new ClientCredentialsAuthProvider(config.twitchClientId, config.twitchClientSecret)
     const apiClient = new ApiClient({authProvider})
-    this.helixClip = await apiClient.helix.clips.getClipById(this.targetUrl.clipSlug)
-    this.krakenClip = await apiClient.callApi({
-      url: `clips/${this.targetUrl.clipSlug}`,
-    })
-    const clipData = {
+    const [helixClip, krakenClip] = await Promise.all([
+      apiClient.helix.clips.getClipById(this.targetUrl.clipSlug),
+      apiClient.callApi({
+        url: `clips/${this.targetUrl.clipSlug}`,
+      }),
+    ])
+    this.helixClip = helixClip
+    this.krakenClip = krakenClip
+    this.clipData = {
       id: getClipIdFromThumbnailUrl(this.helixClip.thumbnailUrl),
       slug: this.helixClip.id,
       title: this.helixClip.title.trim(),
@@ -207,24 +211,26 @@ export default class extends Platformm {
       gameTitle: this.krakenClip.game,
       duration: this.krakenClip.duration * 1000,
     }
+    logger.info(`Clip: ${this.clipData.title} (${readableMs(this.clipData.duration)})`)
+    logger.info(`Clipped by ${this.clipData.clipperTitle} for ${this.clipData.streamerTitle} during ${this.clipData.gameTitle}`)
     if (this.krakenClip.vod) {
       this.hasVideo = true
-      clipData.offset = this.krakenClip.vod.offset * 1000
-      clipData.offsetHms = secondsToHms(this.krakenClip.vod.offset)
-      clipData.videoId = this.helixClip.videoId
+      this.clipData.offset = this.krakenClip.vod.offset * 1000
+      this.clipData.offsetHms = secondsToHms(this.krakenClip.vod.offset)
+      this.clipData.videoId = this.helixClip.videoId
       this.helixVideo = await this.helixClip.getVideo()
       await this.prepareVideo()
     } else {
       logger.warn("Video is not available")
     }
-    this.folder = path.join(this.argv.storageDirectory, "twitch", clipData.streamerId, "clips", clipData.id)
+    this.folder = path.join(this.argv.storageDirectory, "twitch", this.clipData.streamerId, "clips", this.clipData.id)
     this.youtubeDlDataFile = path.join(this.folder, "download.info.json")
     this.downloadedFile = await getDownloadedVideo(this.folder)
     if (this.downloadedFile) {
       logger.warn(`${this.downloadedFile} already exists`)
       return
     }
-    await this.download(clipData.url)
+    await this.download()
     const youtubeDlData = await readFileJson(this.youtubeDlDataFile)
     this.probe = new Probe(this.downloadedFile, this.argv.ffprobePath)
     await this.probe.run()
@@ -232,7 +238,7 @@ export default class extends Platformm {
     const archiveProbe = new Probe(archiveResult.file, this.argv.ffprobePath)
     await archiveProbe.run()
     logger.info(`Encoded “${this.probe.toString()}” to “${archiveProbe.toString()}” with speed ${getEncodeSpeedString(this.probe.duration, archiveResult.runtime)}`)
-    this.meta.clip = clipData
+    this.meta.clip = this.clipData
     this.meta.youtubeDl = youtubeDlData
     this.meta.probe = this.probe.toJson()
     this.meta.archiveProbe = archiveProbe.toJson()
