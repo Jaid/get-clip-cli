@@ -1,13 +1,13 @@
 import logger from "lib/logger"
 import TargetUrl from "lib/TargetUrl"
 
-import TwitchClip from "src/platform/twitchClip"
+import TwitchClip from "src/platforms/TwitchClip"
 
 const platformMap = {
   twitchClip: TwitchClip,
 }
 
-const testUrl = "https://clips.twitch.tv/SassyAgreeableRutabagaDancingBanana" // Lea Diable
+const testUrl = "https://clips.twitch.tv/SassyAgreeableRutabagaDancingBanana" // Lea Diablo
 // const testUrl = "https://www.twitch.tv/jaidchen/clip/FrailPreciousSalmonSaltBae" // Jaidchen Testi
 
 /**

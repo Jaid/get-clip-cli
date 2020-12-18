@@ -49,13 +49,13 @@ export default class FfmpegCommandGenerator {
       commandArgs.push("-i")
       commandArgs.push(options.inputFile)
     }
-    if (options.audioEncoder) {
-      for (const arg of options.audioEncoder.toArgs()) {
+    if (options.videoEncoder) {
+      for (const arg of options.videoEncoder.toArgs()) {
         commandArgs.push(arg)
       }
     }
-    if (options.videoEncoder) {
-      for (const arg of options.videoEncoder.toArgs()) {
+    if (options.audioEncoder) {
+      for (const arg of options.audioEncoder.toArgs()) {
         commandArgs.push(arg)
       }
     }

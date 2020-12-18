@@ -36,11 +36,11 @@ export default class Command {
    */
   async run(additionalOptions) {
     const commandArguments = this.buildArguments(additionalOptions)
-    logger.info(`${this.options.executablePath} ${commandArguments.join(" ")}`)
+    logger.debug(`${this.options.executablePath} ${commandArguments.join(" ")}`)
     const startTime = Date.now()
     const result = await execa(this.options.executablePath, commandArguments)
     const endTime = Date.now()
-    logger.info(`Done in ${readableMs(endTime - startTime)}`)
+    logger.debug(`Returned ${result.exitCode} in ${readableMs(endTime - startTime)}`)
     return result
   }
 
