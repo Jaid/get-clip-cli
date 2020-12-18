@@ -8,18 +8,17 @@ import {ApiClient} from "twitch"
 import {ClientCredentialsAuthProvider} from "twitch-auth"
 
 import config from "lib/config"
-import FfmpegAac from "lib/FfmpegAac"
 import FfmpegCommand from "lib/FfmpegCommand"
-import FfmpegHevc from "lib/FfmpegHevc"
-import FfmpegOpus from "lib/FfmpegOpus"
 import logger from "lib/logger"
 import secondsToHms from "lib/secondsToHms"
 import TargetUrl from "lib/TargetUrl"
 import YouTubeDlCommand from "lib/YouTubeDlCommand"
 
-import TwitchVideo from "src/handler/TwitchVideo"
+import FfmpegAac from "src/packages/ffmpeg-args/src/FfmpegAac"
+import FfmpegHevc from "src/packages/ffmpeg-args/src/FfmpegHevc"
+import TwitchVideo from "src/platformm/TwitchVideo"
 
-import Handler from "."
+import Platformm from "."
 
 /**
  * @param {string} folder
@@ -45,7 +44,7 @@ function getClipIdFromThumbnailUrl(url) {
   return regex.exec(url).groups.id
 }
 
-export default class extends Handler {
+export default class extends Platformm {
 
   async run() {
     const meta = {}
@@ -93,8 +92,8 @@ export default class extends Handler {
         ownerTitle: videoResponse.userDisplayName,
         id: videoResponse.id,
       }
-      const videoHandler = new TwitchVideo(videoUrl, this.argv, {videoData})
-      await videoHandler.run()
+      const videoPlatformm = new TwitchVideo(videoUrl, this.argv, {videoData})
+      await videoPlatformm.run()
       meta.video = videoData
       clipData.videoId = clipResponse.videoId
     } else {

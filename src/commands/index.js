@@ -1,14 +1,14 @@
 import logger from "lib/logger"
 import TargetUrl from "lib/TargetUrl"
 
-import TwitchClip from "src/handler/twitchClip"
+import TwitchClip from "src/platform/twitchClip"
 
-const handlerMap = {
+const platformMap = {
   twitchClip: TwitchClip,
 }
 
-// const testUrl = "https://clips.twitch.tv/SassyAgreeableRutabagaDancingBanana" // Lea Diable
-const testUrl = "https://www.twitch.tv/jaidchen/clip/FrailPreciousSalmonSaltBae" // Jaidchen Testi
+const testUrl = "https://clips.twitch.tv/SassyAgreeableRutabagaDancingBanana" // Lea Diable
+// const testUrl = "https://www.twitch.tv/jaidchen/clip/FrailPreciousSalmonSaltBae" // Jaidchen Testi
 
 /**
  * @param {import("yargs").Arguments<import("src").Options>} argv
@@ -20,6 +20,6 @@ export default async argv => {
   }
   logger.info(`Target URL: ${argv.url}`)
   const targetUrl = new TargetUrl(argv.url)
-  const handler = new handlerMap[targetUrl.type](targetUrl, argv)
-  await handler.run()
+  const platform = new platformMap[targetUrl.type](targetUrl, argv)
+  await platform.run()
 }

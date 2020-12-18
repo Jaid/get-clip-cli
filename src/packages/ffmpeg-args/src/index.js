@@ -9,11 +9,7 @@
  * @prop {import("./FfmpegAudioEncoder").default} [audioEncoder]
  */
 
-import {omit} from "lodash"
-
-import Command from "src/lib/Command"
-
-export default class extends Command {
+export default class FfmpegCommandGenerator {
 
   /**
    * @type {CommandOptions} options
@@ -21,11 +17,12 @@ export default class extends Command {
   commandOptions = null
 
   /**
-   * @param {CommandOptions & import("lib/Command").Options} options
+   * @param {CommandOptions} options
    */
   constructor(options) {
-    super(options)
-    this.commandOptions = omit(options, "executablePath")
+    this.commandOptions = {
+      ...options,
+    }
   }
 
   /**

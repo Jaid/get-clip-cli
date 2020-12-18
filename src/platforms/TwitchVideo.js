@@ -8,15 +8,14 @@ import {ClientCredentialsAuthProvider} from "twitch-auth"
 
 import AutosubCommand from "lib/AutosubCommand"
 import config from "lib/config"
-import FfmpegAac from "lib/FfmpegAac"
-import FfmpegAv1 from "lib/FfmpegAv1"
 import FfmpegCommand from "lib/FfmpegCommand"
-import FfmpegHevc from "lib/FfmpegHevc"
-import FfmpegOpus from "lib/FfmpegOpus"
 import logger from "lib/logger"
 import YouTubeDlCommand from "lib/YouTubeDlCommand"
 
-import Handler from "."
+import FfmpegAac from "src/packages/ffmpeg-args/src/FfmpegAac"
+import FfmpegHevc from "src/packages/ffmpeg-args/src/FfmpegHevc"
+
+import Platform from "."
 
 /**
  * @param {string} folder
@@ -48,7 +47,7 @@ async function getSrtFile(folder) {
   return null
 }
 
-export default class extends Handler {
+export default class extends Platform {
 
   async run() {
     const authProvider = new ClientCredentialsAuthProvider(config.twitchClientId, config.twitchClientSecret)

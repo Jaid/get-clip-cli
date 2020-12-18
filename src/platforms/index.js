@@ -1,6 +1,6 @@
 import logger from "lib/logger"
 
-export default class Handler {
+export default class Platform {
 
   /**
    * @param {import("src/lib/TargetUrl").default} targetUrl
