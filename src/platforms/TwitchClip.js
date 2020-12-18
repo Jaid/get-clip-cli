@@ -1,7 +1,4 @@
-import fsp from "@absolunet/fsp"
 import filenamifyShrink from "filenamify-shrink"
-import {outputFile} from "fs-extra"
-import globby from "globby"
 import path from "path"
 import readFileJson from "read-file-json"
 import readableMs from "readable-ms"
@@ -9,20 +6,15 @@ import {ApiClient} from "twitch"
 import {ClientCredentialsAuthProvider} from "twitch-auth"
 
 import config from "lib/config"
-import FfmpegCommand from "lib/FfmpegCommand"
 import {getEncodeSpeedString} from "lib/getEncodeSpeed"
 import logger from "lib/logger"
 import Probe from "lib/Probe"
 import secondsToHms from "lib/secondsToHms"
 import TargetUrl from "lib/TargetUrl"
-import YouTubeDlCommand from "lib/YouTubeDlCommand"
 
-import FfmpegAac from "src/packages/ffmpeg-args/src/FfmpegAac"
-import FfmpegAudioCopy from "src/packages/ffmpeg-args/src/FfmpegAudioCopy"
-import FfmpegHevc from "src/packages/ffmpeg-args/src/FfmpegHevc"
 import TwitchVideo from "src/platforms/TwitchVideo"
 
-import Platform from "."
+import Twitch from "./Twitch"
 
 /**
  * @typedef {object} KrakenVod
@@ -50,21 +42,6 @@ import Platform from "."
  */
 
 /**
- * @param {string} folder
- * @return {Promise<string|null>}
- */
-async function getDownloadedVideo(folder) {
-  const files = await globby(["download.*", "!*.json"], {
-    cwd: folder,
-    absolute: true,
-  })
-  if (files.length) {
-    return files[0]
-  }
-  return null
-}
-
-/**
  * @param {string} url
  * @return {string}
  */
@@ -73,24 +50,12 @@ function getClipIdFromThumbnailUrl(url) {
   return regex.exec(url).groups.id
 }
 
-export default class extends Platform {
-
-  /**
-   * @type {string}
-   */
-  downloadedFile = null
-
-  /**
-   * @type {string}
-   */
-  folder = null
+export default class extends Twitch {
 
   /**
    * @type {string}
    */
   youtubeDlDataFile = null
-
-  meta = {}
 
   /**
    * @type {boolean}
@@ -113,26 +78,6 @@ export default class extends Platform {
   krakenClip = null
 
   /**
-   * @type {Probe}
-   */
-  probe = null
-
-  /**
-   * @return {Promise<void>}
-   */
-  async download() {
-    const youtubeDl = new YouTubeDlCommand({
-      url: this.clipData.url,
-      executablePath: this.argv.youtubeDlPath,
-      outputFile: path.join(this.folder, "download.%(ext)s"),
-      writeInfoJson: true,
-      callHome: false,
-    })
-    await youtubeDl.run()
-    this.downloadedFile = await getDownloadedVideo(this.folder)
-  }
-
-  /**
    * @return {Promise<void>}
    */
   async prepareVideo() {
@@ -144,42 +89,6 @@ export default class extends Platform {
       helixVideo: this.helixVideo,
     })
     await videoPlatform.run()
-  }
-
-  /**
-   * @return {Promise<ArchiveResult>}
-   */
-  async createArchive() {
-    const ffmpegOutputFile = path.join(this.folder, "archive.mp4")
-    const videoEncoder = new FfmpegHevc
-    let audioEncoder
-    if (this.probe.audio.codec_name === "aac" && this.probe.audio.profile === "LC") {
-      audioEncoder = new FfmpegAudioCopy
-    } else {
-      audioEncoder = new FfmpegAac
-    }
-    const ffmpeg = new FfmpegCommand({
-      videoEncoder,
-      audioEncoder,
-      executablePath: this.argv.ffmpegPath,
-      inputFile: this.downloadedFile,
-      outputFile: ffmpegOutputFile,
-      hwAccel: "auto",
-    })
-    const startTime = Date.now()
-    await ffmpeg.run()
-    return {
-      runtime: Date.now() - startTime,
-      file: ffmpegOutputFile,
-    }
-  }
-
-  /**
-   * @return {Promise<void>}
-   */
-  async dumpMeta() {
-    const clipDataFile = path.join(this.folder, "meta.yml")
-    await fsp.outputYaml(clipDataFile, this.meta)
   }
 
   async run() {
@@ -225,12 +134,12 @@ export default class extends Platform {
     }
     this.folder = path.join(this.argv.storageDirectory, "twitch", this.clipData.streamerId, "clips", this.clipData.id)
     this.youtubeDlDataFile = path.join(this.folder, "download.info.json")
-    this.downloadedFile = await getDownloadedVideo(this.folder)
+    this.downloadedFile = await this.getDownloadedVideo()
     if (this.downloadedFile) {
       logger.warn(`${this.downloadedFile} already exists`)
       return
     }
-    await this.download()
+    await this.download(this.clipData.url)
     const youtubeDlData = await readFileJson(this.youtubeDlDataFile)
     this.probe = new Probe(this.downloadedFile, this.argv.ffprobePath)
     await this.probe.run()

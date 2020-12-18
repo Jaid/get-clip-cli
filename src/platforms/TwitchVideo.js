@@ -1,26 +1,18 @@
-import fsp from "@absolunet/fsp"
 import findByExtension from "find-by-extension"
 import fs from "fs/promises"
 import globby from "globby"
 import path from "path"
 import readableMs from "readable-ms"
 import tempy from "tempy"
-import {ApiClient} from "twitch"
 import {ClientCredentialsAuthProvider} from "twitch-auth"
 
 import AutosubCommand from "lib/AutosubCommand"
 import config from "lib/config"
-import FfmpegCommand from "lib/FfmpegCommand"
 import {getEncodeSpeedString} from "lib/getEncodeSpeed"
 import logger from "lib/logger"
 import Probe from "lib/Probe"
-import YouTubeDlCommand from "lib/YouTubeDlCommand"
 
-import FfmpegAac from "src/packages/ffmpeg-args/src/FfmpegAac"
-import FfmpegAudioCopy from "src/packages/ffmpeg-args/src/FfmpegAudioCopy"
-import FfmpegHevc from "src/packages/ffmpeg-args/src/FfmpegHevc"
-
-import Platform from "."
+import Twitch from "./Twitch"
 
 /**
  * @typedef {object} VideoData
@@ -40,27 +32,6 @@ import Platform from "."
  */
 
 /**
- * @typedef {object} ArchiveResult
- * @prop {number} runtime
- * @prop {string} file
- */
-
-/**
- * @param {string} folder
- * @return {Promise<string|null>}
- */
-async function getDownloadedVideo(folder) {
-  const files = await globby(["download.*", "!*.json"], {
-    cwd: folder,
-    absolute: true,
-  })
-  if (files.length) {
-    return files[0]
-  }
-  return null
-}
-
-/**
  * @param {string} folder
  * @return {Promise<string|null>}
  */
@@ -75,22 +46,7 @@ async function getSrtFile(folder) {
   return null
 }
 
-export default class extends Platform {
-
-  /**
-   * @type {string}
-   */
-  downloadedFile = null
-
-  /**
-   * @type {string}
-   */
-  folder = null
-
-  /**
-   * @type {object}
-   */
-  meta = {}
+export default class extends Twitch {
 
   /**
    * @type {import("twitch").HelixVideo}
@@ -101,23 +57,6 @@ export default class extends Platform {
    * @type {VideoData}
    */
   videoData = null
-
-  /**
-   * @type {Probe}
-   */
-  probe = null
-
-  async download() {
-    const youtubeDl = new YouTubeDlCommand({
-      url: this.videoData.url,
-      executablePath: this.argv.youtubeDlPath,
-      outputFile: path.join(this.folder, "download.%(ext)s"),
-      writeInfoJson: true,
-      callHome: false,
-    })
-    await youtubeDl.run()
-    this.downloadedFile = await getDownloadedVideo(this.folder)
-  }
 
   async createSubtitles() {
     const tempFolder = tempy.directory({
@@ -147,42 +86,6 @@ export default class extends Platform {
     ])
   }
 
-  /**
-   * @return {Promise<ArchiveResult>}
-   */
-  async createArchive() {
-    const ffmpegOutputFile = path.join(this.folder, "archive.mp4")
-    const videoEncoder = new FfmpegHevc
-    let audioEncoder
-    if (this.probe.audio.codec_name === "aac" && this.probe.audio.profile === "LC") {
-      audioEncoder = new FfmpegAudioCopy
-    } else {
-      audioEncoder = new FfmpegAac
-    }
-    const ffmpeg = new FfmpegCommand({
-      videoEncoder,
-      audioEncoder,
-      executablePath: this.argv.ffmpegPath,
-      inputFile: this.downloadedFile,
-      outputFile: ffmpegOutputFile,
-      hwAccel: "auto",
-    })
-    const startTime = Date.now()
-    await ffmpeg.run()
-    return {
-      runtime: Date.now() - startTime,
-      file: ffmpegOutputFile,
-    }
-  }
-
-  /**
-   * @return {Promise<void>}
-   */
-  async dumpMeta() {
-    const clipDataFile = path.join(this.folder, "meta.yml")
-    await fsp.outputYaml(clipDataFile, this.meta)
-  }
-
   async run() {
     if (this.options.helixVideo) {
       this.helixVideo = this.options.helixVideo
@@ -208,7 +111,7 @@ export default class extends Platform {
     logger.info(`Video: ${this.videoData.title} (${readableMs(this.videoData.duration)})`)
     const ownerName = this.videoData.ownerTitle.toLowerCase()
     this.folder = path.join(this.argv.storageDirectory, "twitch", ownerName, "videos", this.videoData.id)
-    await this.download()
+    await this.download(this.videoData.url)
     this.probe = new Probe(this.downloadedFile, this.argv.ffprobePath)
     await this.probe.run()
     const [archiveResult] = await Promise.all([
