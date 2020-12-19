@@ -1,8 +1,10 @@
 import fsp from "@absolunet/fsp"
 import globby from "globby"
+import normalizePath from "normalize-path"
 import path from "path"
 
 import FfmpegCommand from "lib/FfmpegCommand"
+import pathJoin from "lib/pathJoin"
 import YouTubeDlCommand from "lib/YouTubeDlCommand"
 
 import FfmpegAac from "src/packages/ffmpeg-args/src/FfmpegAac"
@@ -50,7 +52,7 @@ export default class extends Platform {
       absolute: true,
     })
     if (files.length) {
-      return files[0]
+      return normalizePath(files[0])
     }
     return null
   }
@@ -63,7 +65,7 @@ export default class extends Platform {
     const youtubeDl = new YouTubeDlCommand({
       url,
       executablePath: this.argv.youtubeDlPath,
-      outputFile: path.join(this.folder, "download.%(ext)s"),
+      outputFile: pathJoin(this.folder, "download.%(ext)s"),
       writeInfoJson: true,
       callHome: false,
     })
@@ -75,7 +77,7 @@ export default class extends Platform {
    * @return {Promise<ArchiveResult>}
    */
   async createArchive() {
-    const ffmpegOutputFile = path.join(this.folder, "archive.mp4")
+    const ffmpegOutputFile = pathJoin(this.folder, "archive.mp4")
     const videoEncoder = new FfmpegHevc
     let audioEncoder
     if (this.probe.audio.codec_name === "aac" && this.probe.audio.profile === "LC") {
@@ -103,7 +105,7 @@ export default class extends Platform {
    * @return {Promise<void>}
    */
   async dumpMeta() {
-    const clipDataFile = path.join(this.folder, "meta.yml")
+    const clipDataFile = pathJoin(this.folder, "meta.yml")
     await fsp.outputYaml(clipDataFile, this.meta)
   }
 

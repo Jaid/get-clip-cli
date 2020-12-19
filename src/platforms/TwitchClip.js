@@ -1,5 +1,4 @@
 import filenamifyShrink from "filenamify-shrink"
-import path from "path"
 import readFileJson from "read-file-json"
 import readableMs from "readable-ms"
 import {ApiClient} from "twitch"
@@ -8,6 +7,7 @@ import {ClientCredentialsAuthProvider} from "twitch-auth"
 import config from "lib/config"
 import {getEncodeSpeedString} from "lib/getEncodeSpeed"
 import logger from "lib/logger"
+import pathJoin from "lib/pathJoin"
 import Probe from "lib/Probe"
 import secondsToHms from "lib/secondsToHms"
 import TargetUrl from "lib/TargetUrl"
@@ -132,8 +132,8 @@ export default class extends Twitch {
     } else {
       logger.warn("Video is not available")
     }
-    this.folder = path.join(this.argv.storageDirectory, "twitch", this.clipData.streamerId, "clips", this.clipData.id)
-    this.youtubeDlDataFile = path.join(this.folder, "download.info.json")
+    this.folder = pathJoin(this.argv.storageDirectory, "twitch", this.clipData.streamerId, "clips", this.clipData.id)
+    this.youtubeDlDataFile = pathJoin(this.folder, "download.info.json")
     this.downloadedFile = await this.getDownloadedVideo()
     if (this.downloadedFile) {
       logger.warn(`${this.downloadedFile} already exists`)

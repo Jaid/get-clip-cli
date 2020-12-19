@@ -1,7 +1,6 @@
 import findByExtension from "find-by-extension"
 import fs from "fs/promises"
 import globby from "globby"
-import path from "path"
 import readableMs from "readable-ms"
 import tempy from "tempy"
 import {ClientCredentialsAuthProvider} from "twitch-auth"
@@ -10,6 +9,7 @@ import AutosubCommand from "lib/AutosubCommand"
 import config from "lib/config"
 import {getEncodeSpeedString} from "lib/getEncodeSpeed"
 import logger from "lib/logger"
+import pathJoin from "lib/pathJoin"
 import Probe from "lib/Probe"
 
 import Twitch from "./Twitch"
@@ -66,15 +66,15 @@ export default class extends Twitch {
     const autosub = new AutosubCommand({
       executablePath: this.argv.autosubPath,
       inputFile: this.downloadedFile,
-      outputFile: path.join(tempFolder, "autosub"),
+      outputFile: pathJoin(tempFolder, "autosub"),
       format: "srt",
       speechLanguage: this.argv.autosubLanguage,
       additionalOutputFiles: "full-src",
     })
     await autosub.run()
     const tempSrtFile = await getSrtFile(tempFolder)
-    const srtFile = path.join(this.folder, "autosub.srt")
-    const autosubSourceFile = path.join(this.folder, "autosub.json")
+    const srtFile = pathJoin(this.folder, "autosub.srt")
+    const autosubSourceFile = pathJoin(this.folder, "autosub.json")
     const tempAutosubSourceFile = findByExtension("json", {
       cwd: tempFolder,
       absolute: true,
@@ -110,7 +110,7 @@ export default class extends Twitch {
     }
     logger.info(`Video: ${this.videoData.title} (${readableMs(this.videoData.duration)})`)
     const ownerName = this.videoData.ownerTitle.toLowerCase()
-    this.folder = path.join(this.argv.storageDirectory, "twitch", ownerName, "videos", this.videoData.id)
+    this.folder = pathJoin(this.argv.storageDirectory, "twitch", ownerName, "videos", this.videoData.id)
     await this.download(this.videoData.url)
     this.probe = new Probe(this.downloadedFile, this.argv.ffprobePath)
     await this.probe.run()

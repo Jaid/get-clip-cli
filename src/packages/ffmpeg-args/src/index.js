@@ -30,6 +30,7 @@ export default class FfmpegCommandGenerator {
    * @return {string[]}
    */
   buildArguments(additionalOptions) {
+    debugger
     const options = {
       ...this.commandOptions,
       ...additionalOptions,
