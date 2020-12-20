@@ -1,3 +1,4 @@
+import filenamifyShrink from "filenamify-shrink"
 import findByExtension from "find-by-extension"
 import fs from "fs/promises"
 import globby from "globby"
@@ -18,6 +19,7 @@ import Twitch from "./Twitch"
  * @typedef {object} VideoData
  * @prop {number} duration Milliseconds
  * @prop {string} title
+ * @prop {string} titleNormalized
  * @prop {string} language
  * @prop {Date} creationDate
  * @prop {Date} publishDate
@@ -97,6 +99,7 @@ export default class extends Twitch {
     this.videoData = {
       duration: this.helixVideo.durationInSeconds * 1000,
       title: this.helixVideo.title.trim(),
+      titleNormalized: filenamifyShrink(this.helixVideo.title).trim(),
       language: this.helixVideo.language,
       creationDate: this.helixVideo.creationDate,
       publishDate: this.helixVideo.publishDate,
@@ -112,7 +115,7 @@ export default class extends Twitch {
     logger.info(`Video: ${this.videoData.title} (${readableMs(this.videoData.duration)})`)
     const ownerName = this.videoData.ownerTitle.toLowerCase()
     this.folder = pathJoin(this.argv.storageDirectory, "twitch", ownerName, "videos", this.videoData.id)
-    await this.download(this.videoData.url)
+    await this.download(this.videoData.url, this.videoData.titleNormalized)
     this.probe = new Probe(this.downloadedFile, this.argv.ffprobePath)
     await this.probe.run()
     const [archiveResult] = await Promise.all([

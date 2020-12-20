@@ -71,6 +71,7 @@ export default class {
   }
 
   async run() {
+    logger.debug(`Probe ${this.file}`)
     const startTime = Date.now()
     this.raw = await ffprobe(this.file, {
       path: this.ffprobePath,

@@ -47,8 +47,8 @@ export default class extends Platform {
    * @return {Promise<string|null>}
    */
   async getDownloadedVideo() {
-    const files = await globby(["download.*", "!*.json"], {
-      cwd: this.folder,
+    const files = await globby(["!*.json"], {
+      cwd: pathJoin(this.folder, "download"),
       absolute: true,
     })
     if (files.length) {
@@ -59,14 +59,15 @@ export default class extends Platform {
 
   /**
    * @param {string} url
+   * @param {string} [fileBase="download"]
    * @return {Promise<void>}
    */
-  async download(url) {
+  async download(url, fileBase = "download") {
     const youtubeDl = new YouTubeDlCommand({
       url,
       executablePath: this.argv.youtubeDlPath,
       argv: this.argv,
-      outputFile: pathJoin(this.folder, "download.%(ext)s"),
+      outputFile: pathJoin(this.folder, "download", `${fileBase}.%(ext)s`),
       writeInfoJson: true,
       callHome: false,
     })

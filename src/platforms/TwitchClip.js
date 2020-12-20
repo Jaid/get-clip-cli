@@ -139,7 +139,7 @@ export default class extends Twitch {
       logger.warn(`${this.downloadedFile} already exists`)
       return
     }
-    await this.download(this.clipData.url)
+    await this.download(this.clipData.url, this.clipData.titleNormalized)
     const youtubeDlData = await readFileJson(this.youtubeDlDataFile)
     this.probe = new Probe(this.downloadedFile, this.argv.ffprobePath)
     await this.probe.run()
