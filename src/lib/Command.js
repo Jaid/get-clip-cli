@@ -7,6 +7,7 @@ import logger from "./logger"
 /**
  * @typedef {object} Options
  * @prop {string} executablePath
+ * @prop {import("yargs").Arguments<import("src").Options>} argv
  */
 export default class Command {
 
@@ -19,7 +20,7 @@ export default class Command {
    * @param {Options} options
    */
   constructor(options) {
-    this.options = pick(options, ["executablePath"])
+    this.options = pick(options, ["executablePath", "argv"])
   }
 
   /**

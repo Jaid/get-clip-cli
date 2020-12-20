@@ -15,7 +15,7 @@ export default class extends Command {
    */
   constructor(options) {
     super(options)
-    this.commandOptions = omit(options, "executablePath")
+    this.commandOptions = omit(options, ["executablePath", "argv"])
     this.commandGenerator = new FfmpegCommandGenerator(this.commandOptions)
   }
 

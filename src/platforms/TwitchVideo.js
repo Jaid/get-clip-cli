@@ -65,6 +65,7 @@ export default class extends Twitch {
     logger.debug(`Using temp folder: ${tempFolder}`)
     const autosub = new AutosubCommand({
       executablePath: this.argv.autosubPath,
+      argv: this.argv,
       inputFile: this.downloadedFile,
       outputFile: pathJoin(tempFolder, "autosub"),
       format: "srt",

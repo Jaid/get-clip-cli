@@ -14,6 +14,7 @@ import handleInfoCommand from "src/commands/info"
  * @prop {string} autosubPath
  * @prop {string} storageDirectory
  * @prop {string} autosubLanguage
+ * @prop {string} encodePreset
  */
 
 /**
@@ -49,6 +50,10 @@ const commandBuilder = {
     description: "Lanuage code of the language spoken in the clip",
     type: "string",
     default: "de-de",
+  },
+  "encode-preset": {
+    description: "General encode preset",
+    type: "string",
   },
 }
 

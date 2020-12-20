@@ -65,6 +65,7 @@ export default class extends Platform {
     const youtubeDl = new YouTubeDlCommand({
       url,
       executablePath: this.argv.youtubeDlPath,
+      argv: this.argv,
       outputFile: pathJoin(this.folder, "download.%(ext)s"),
       writeInfoJson: true,
       callHome: false,
@@ -78,7 +79,9 @@ export default class extends Platform {
    */
   async createArchive() {
     const ffmpegOutputFile = pathJoin(this.folder, "archive.mp4")
-    const videoEncoder = new FfmpegHevc
+    const videoEncoder = new FfmpegHevc({
+      preset: this.argv.encodePreset,
+    })
     let audioEncoder
     if (this.probe.audio.codec_name === "aac" && this.probe.audio.profile === "LC") {
       audioEncoder = new FfmpegAudioCopy
@@ -89,6 +92,7 @@ export default class extends Platform {
       videoEncoder,
       audioEncoder,
       executablePath: this.argv.ffmpegPath,
+      argv: this.argv,
       inputFile: this.downloadedFile,
       outputFile: ffmpegOutputFile,
       hwAccel: "auto",
