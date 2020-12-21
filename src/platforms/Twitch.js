@@ -2,12 +2,12 @@ import fsp from "@absolunet/fsp"
 import fs from "fs/promises"
 import globby from "globby"
 import normalizePath from "normalize-path"
-import path from "path"
-import replaceBasename from "replace-basename"
+import prettyBytes from "pretty-bytes"
 
 import FfmpegCommand from "lib/FfmpegCommand"
 import logger from "lib/logger"
 import pathJoin from "lib/pathJoin"
+import replaceBasename from "lib/replaceBasename"
 import YouTubeDlCommand from "lib/YouTubeDlCommand"
 
 import FfmpegAac from "src/packages/ffmpeg-args/src/FfmpegAac"
@@ -88,6 +88,8 @@ export default class extends Platform {
       await fs.rename(this.downloadedFile, renamedFile)
       this.downloadedFile = renamedFile
     }
+    const downloadedFileStat = await fs.stat(this.downloadedFile)
+    logger.info(`Downloaded ${this.downloadedFile} (${prettyBytes(downloadedFileStat.size)})`)
   }
 
   /**
