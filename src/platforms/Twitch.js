@@ -1,9 +1,12 @@
 import fsp from "@absolunet/fsp"
+import fs from "fs/promises"
 import globby from "globby"
 import normalizePath from "normalize-path"
 import path from "path"
+import replaceBasename from "replace-basename"
 
 import FfmpegCommand from "lib/FfmpegCommand"
+import logger from "lib/logger"
 import pathJoin from "lib/pathJoin"
 import YouTubeDlCommand from "lib/YouTubeDlCommand"
 
@@ -47,7 +50,7 @@ export default class extends Platform {
    * @return {Promise<string|null>}
    */
   async getDownloadedVideo() {
-    const files = await globby(["!*.json"], {
+    const files = await globby(["download.*", "!*.json"], {
       cwd: pathJoin(this.folder, "download"),
       absolute: true,
     })
@@ -63,16 +66,28 @@ export default class extends Platform {
    * @return {Promise<void>}
    */
   async download(url, fileBase = "download") {
+    const downloadFolder = pathJoin(this.folder, "download")
     const youtubeDl = new YouTubeDlCommand({
       url,
       executablePath: this.argv.youtubeDlPath,
       argv: this.argv,
-      outputFile: pathJoin(this.folder, "download", `${fileBase}.%(ext)s`),
+      outputFile: pathJoin(downloadFolder, "download.%(ext)s"),
       writeInfoJson: true,
       callHome: false,
     })
     await youtubeDl.run()
     this.downloadedFile = await this.getDownloadedVideo()
+    if (!this.downloadedFile) {
+      throw new Error(`Something went wrong. youtube-dl did run, but there is no downloaded file in “${this.folder}”.`)
+    }
+    const renamedFile = replaceBasename(this.downloadedFile, fileBase)
+    if (renamedFile === this.downloadedFile) {
+      logger.debug(`Nothing better to rename to, so we will keep the download file name “${this.downloadedFile}”`)
+    } else {
+      logger.debug(`Renaming ${this.downloadedFile} to ${renamedFile}`)
+      await fs.rename(this.downloadedFile, renamedFile)
+      this.downloadedFile = renamedFile
+    }
   }
 
   /**
