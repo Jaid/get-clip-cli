@@ -122,6 +122,7 @@ export default class extends Twitch {
     }
     logger.info(`Clip: ${this.clipData.title} (${readableMs(this.clipData.duration)})`)
     logger.info(`Clipped by ${this.clipData.clipperTitle} for ${this.clipData.streamerTitle} during ${this.clipData.gameTitle}`)
+    this.videoFileBase = this.clipData.titleNormalized
     if (this.krakenClip.vod) {
       this.hasVideo = true
       this.clipData.offset = this.krakenClip.vod.offset * 1000
@@ -139,7 +140,7 @@ export default class extends Twitch {
       logger.warn(`${this.downloadedFile} already exists`)
       return
     }
-    await this.download(this.clipData.url, this.clipData.titleNormalized)
+    await this.download(this.clipData.url)
     const youtubeDlData = await readFileJson(this.youtubeDlDataFile)
     this.probe = new Probe(this.downloadedFile, this.argv.ffprobePath)
     await this.probe.run()

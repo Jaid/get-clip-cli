@@ -3,8 +3,9 @@ import replaceBasename from "replace-basename"
 
 /**
  * @param {string} file
+ * @param {string} newBase
  * @return {string}
  */
-export default file => {
-  return normalizePath(replaceBasename(file))
+export default (file, newBase) => {
+  return normalizePath(replaceBasename(file, newBase))
 }

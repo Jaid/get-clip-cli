@@ -113,9 +113,10 @@ export default class extends Twitch {
       id: this.helixVideo.id,
     }
     logger.info(`Video: ${this.videoData.title} (${readableMs(this.videoData.duration)})`)
+    this.videoFileBase = this.videoData.titleNormalized
     const ownerName = this.videoData.ownerTitle.toLowerCase()
     this.folder = pathJoin(this.argv.storageDirectory, "twitch", ownerName, "videos", this.videoData.id)
-    await this.download(this.videoData.url, this.videoData.titleNormalized)
+    await this.download(this.videoData.url)
     this.probe = new Probe(this.downloadedFile, this.argv.ffprobePath)
     await this.probe.run()
     const [archiveResult] = await Promise.all([

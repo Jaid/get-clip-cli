@@ -39,7 +39,15 @@ export default class extends Platform {
    */
   youtubeDlDataFile = null
 
+  /**
+   * @type {object}
+   */
   meta = {}
+
+  /**
+   * @type {string}
+   */
+  videoFileBase = "video"
 
   /**
    * @type {import("lib/Probe").default}
@@ -62,10 +70,9 @@ export default class extends Platform {
 
   /**
    * @param {string} url
-   * @param {string} [fileBase="download"]
    * @return {Promise<void>}
    */
-  async download(url, fileBase = "download") {
+  async download(url) {
     const downloadFolder = pathJoin(this.folder, "download")
     const youtubeDl = new YouTubeDlCommand({
       url,
@@ -80,7 +87,7 @@ export default class extends Platform {
     if (!this.downloadedFile) {
       throw new Error(`Something went wrong. youtube-dl did run, but there is no downloaded file in “${this.folder}”.`)
     }
-    const renamedFile = replaceBasename(this.downloadedFile, fileBase)
+    const renamedFile = replaceBasename(this.downloadedFile, this.videoFileBase)
     if (renamedFile === this.downloadedFile) {
       logger.debug(`Nothing better to rename to, so we will keep the download file name “${this.downloadedFile}”`)
     } else {
@@ -96,12 +103,15 @@ export default class extends Platform {
    * @return {Promise<ArchiveResult>}
    */
   async createArchive() {
-    const ffmpegOutputFile = pathJoin(this.folder, "archive.mp4")
+    const archiveFolder = pathJoin(this.folder, "archive")
+    await fs.mkdir(archiveFolder)
+    const ffmpegOutputFile = pathJoin(archiveFolder, `${this.videoFileBase}.mp4`)
     const videoEncoder = new FfmpegHevc({
       preset: this.argv.encodePreset,
     })
     let audioEncoder
     if (this.probe.audio.codec_name === "aac" && this.probe.audio.profile === "LC") {
+      logger.debug("Audio will not be reencoded, because it is already aac_LC.")
       audioEncoder = new FfmpegAudioCopy
     } else {
       audioEncoder = new FfmpegAac
