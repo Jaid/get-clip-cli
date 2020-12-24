@@ -31,7 +31,14 @@ import logger from "./logger"
   * @return {string}
   */
 function streamToString(stream) {
-  return `${stream.codec_name}_${stream.profile} ${Math.ceil(stream.bit_rate / 1000)}k`
+  const bitrate = Math.ceil(stream.bit_rate / 1000)
+  let codecTitle
+  if (stream.profile) {
+    codecTitle = `${stream.codec_name}_${stream.profile}`
+  } else {
+    codecTitle = stream.codec_name
+  }
+  return `${codecTitle} ${bitrate}k`
 }
 
 export default class {

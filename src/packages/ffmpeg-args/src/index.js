@@ -7,6 +7,9 @@
  * @prop {"none"|"auto"|"vdpau"|"dxva2"|"vaapi"|"qsv"} [hwAccel]
  * @prop {import("./FfmpegVideoEncoder").default} [videoEncoder]
  * @prop {import("./FfmpegAudioEncoder").default} [audioEncoder]
+ * @prop {number} [startTime]
+ * @prop {number} [endTime]
+ * @prop {number} [length]
  */
 
 export default class FfmpegCommandGenerator {
@@ -30,7 +33,6 @@ export default class FfmpegCommandGenerator {
    * @return {string[]}
    */
   buildArguments(additionalOptions) {
-    debugger
     const options = {
       ...this.commandOptions,
       ...additionalOptions,
@@ -46,9 +48,21 @@ export default class FfmpegCommandGenerator {
       commandArgs.push("-hwaccel")
       commandArgs.push(options.hwAccel)
     }
+    if (options.startTime) {
+      commandArgs.push("-ss")
+      commandArgs.push(`${options.startTime}ms`)
+    }
     if (options.inputFile) {
       commandArgs.push("-i")
       commandArgs.push(options.inputFile)
+    }
+    if (options.length) {
+      commandArgs.push("-t")
+      commandArgs.push(`${options.length}ms`)
+    }
+    if (options.endTime) {
+      commandArgs.push("-to")
+      commandArgs.push(`${options.endTime}ms`)
     }
     if (options.videoEncoder) {
       for (const arg of options.videoEncoder.toArgs()) {

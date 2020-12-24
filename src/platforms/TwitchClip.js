@@ -1,10 +1,12 @@
 import filenamifyShrink from "filenamify-shrink"
+import makeDir from "make-dir"
 import readFileJson from "read-file-json"
 import readableMs from "readable-ms"
 import {ApiClient} from "twitch"
 import {ClientCredentialsAuthProvider} from "twitch-auth"
 
 import config from "lib/config"
+import FfmpegCommand from "lib/FfmpegCommand"
 import {getEncodeSpeedString} from "lib/getEncodeSpeed"
 import logger from "lib/logger"
 import pathJoin from "lib/pathJoin"
@@ -12,6 +14,9 @@ import Probe from "lib/Probe"
 import secondsToHms from "lib/secondsToHms"
 import TargetUrl from "lib/TargetUrl"
 
+import FfmpegAac from "src/packages/ffmpeg-args/src/FfmpegAac"
+import FfmpegHevc from "src/packages/ffmpeg-args/src/FfmpegHevc"
+import FfmpegOpus from "src/packages/ffmpeg-args/src/FfmpegOpus"
 import TwitchVideo from "src/platforms/TwitchVideo"
 
 import Twitch from "./Twitch"
@@ -78,6 +83,11 @@ export default class extends Twitch {
   krakenClip = null
 
   /**
+   * @type {TwitchVideo}
+   */
+  videoPlatform = null
+
+  /**
    * @return {Promise<void>}
    */
   async prepareVideo() {
@@ -85,10 +95,25 @@ export default class extends Twitch {
       throw new Error("Needs helixVideo")
     }
     const videoUrl = new TargetUrl(this.helixVideo.url)
-    const videoPlatform = new TwitchVideo(videoUrl, this.argv, {
+    this.videoPlatform = new TwitchVideo(videoUrl, this.argv, {
       helixVideo: this.helixVideo,
     })
-    await videoPlatform.run()
+    await this.videoPlatform.run()
+  }
+
+  async createFromVideo() {
+    const outputFile = pathJoin(this.folder, "a.mkv")
+    const ffmpeg = new FfmpegCommand({
+      videoEncoder: new FfmpegHevc,
+      audioEncoder: new FfmpegOpus,
+      inputFile: this.videoPlatform.downloadedFile,
+      outputFile,
+      argv: this.argv,
+      executablePath: this.argv.ffmpegPath,
+      startTime: this.clipData.offset,
+      length: this.clipData.duration,
+    })
+    await ffmpeg.run()
   }
 
   async run() {
@@ -134,24 +159,30 @@ export default class extends Twitch {
       logger.warn("Video is not available")
     }
     this.folder = pathJoin(this.argv.storageDirectory, "twitch", this.clipData.streamerId, "clips", this.clipData.id)
+    await makeDir(this.folder)
     this.youtubeDlDataFile = pathJoin(this.folder, "download.info.json")
     this.downloadedFile = await this.getDownloadedVideo()
     if (this.downloadedFile) {
       logger.warn(`${this.downloadedFile} already exists`)
       return
     }
-    await this.download(this.clipData.url)
+    // await this.download(this.clipData.url)
+    await this.createFromVideo()
     const youtubeDlData = await readFileJson(this.youtubeDlDataFile)
-    this.probe = new Probe(this.downloadedFile, this.argv.ffprobePath)
-    await this.probe.run()
-    const archiveResult = await this.createArchive()
-    const archiveProbe = new Probe(archiveResult.file, this.argv.ffprobePath)
-    await archiveProbe.run()
-    logger.info(`Encoded “${this.probe.toString()}” to “${archiveProbe.toString()}” with speed ${getEncodeSpeedString(this.probe.duration, archiveResult.runtime)}`)
+    if (this.downloadedFile) {
+      this.probe = new Probe(this.downloadedFile, this.argv.ffprobePath)
+      await this.probe.run()
+      this.meta.probe = this.probe.toJson()
+    }
+    if (false) {
+      const archiveResult = await this.createArchive()
+      const archiveProbe = new Probe(archiveResult.file, this.argv.ffprobePath)
+      await archiveProbe.run()
+      this.meta.archiveProbe = archiveProbe.toJson()
+      logger.info(`Encoded “${this.probe.toString()}” to “${archiveProbe.toString()}” with speed ${getEncodeSpeedString(archiveProbe.duration, archiveResult.runtime)}`)
+    }
     this.meta.clip = this.clipData
     this.meta.youtubeDl = youtubeDlData
-    this.meta.probe = this.probe.toJson()
-    this.meta.archiveProbe = archiveProbe.toJson()
     // @ts-ignore
     // eslint-disable-next-line no-underscore-dangle
     this.meta.helixClip = this.helixClip

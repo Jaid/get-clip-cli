@@ -32,16 +32,29 @@ export default class Command {
   }
 
   /**
+   * @return {Promise<void>}
+   */
+  async beforeRun() {}
+
+  /**
+   * @param {import("execa").ExecaReturnValue} result
+   * @return {Promise<void>}
+   */
+  async afterRun(result) {}
+
+  /**
    * @param {object} [additionalOptions]
    * @return {Promise<*>}
    */
   async run(additionalOptions) {
+    await this.beforeRun()
     const commandArguments = this.buildArguments(additionalOptions)
     logger.debug(`${this.options.executablePath} ${commandArguments.join(" ")}`)
     const startTime = Date.now()
     const result = await execa(this.options.executablePath, commandArguments)
     const endTime = Date.now()
     logger.debug(`Returned ${result.exitCode} in ${readableMs(endTime - startTime)}`)
+    await this.afterRun(result)
     return result
   }
 

@@ -1,6 +1,7 @@
 import fsp from "@absolunet/fsp"
 import fs from "fs/promises"
 import globby from "globby"
+import makeDir from "make-dir"
 import normalizePath from "normalize-path"
 import prettyBytes from "pretty-bytes"
 
@@ -13,6 +14,7 @@ import YouTubeDlCommand from "lib/YouTubeDlCommand"
 import FfmpegAac from "src/packages/ffmpeg-args/src/FfmpegAac"
 import FfmpegAudioCopy from "src/packages/ffmpeg-args/src/FfmpegAudioCopy"
 import FfmpegHevc from "src/packages/ffmpeg-args/src/FfmpegHevc"
+import FfmpegOpus from "src/packages/ffmpeg-args/src/FfmpegOpus"
 
 import Platform from "."
 
@@ -74,6 +76,7 @@ export default class extends Platform {
    */
   async download(url) {
     const downloadFolder = pathJoin(this.folder, "download")
+    await makeDir(downloadFolder)
     const youtubeDl = new YouTubeDlCommand({
       url,
       executablePath: this.argv.youtubeDlPath,
@@ -104,18 +107,18 @@ export default class extends Platform {
    */
   async createArchive() {
     const archiveFolder = pathJoin(this.folder, "archive")
-    await fs.mkdir(archiveFolder)
+    await makeDir(archiveFolder)
     const ffmpegOutputFile = pathJoin(archiveFolder, `${this.videoFileBase}.mp4`)
     const videoEncoder = new FfmpegHevc({
       preset: this.argv.encodePreset,
     })
-    let audioEncoder
-    if (this.probe.audio.codec_name === "aac" && this.probe.audio.profile === "LC") {
-      logger.debug("Audio will not be reencoded, because it is already aac_LC.")
-      audioEncoder = new FfmpegAudioCopy
-    } else {
-      audioEncoder = new FfmpegAac
-    }
+    const audioEncoder = new FfmpegOpus
+    // if (this.probe && this.probe.audio.codec_name === "aac" && this.probe.audio.profile === "LC") {
+    //   logger.debug("Audio will not be reencoded, because it is already aac_LC.")
+    //   audioEncoder = new FfmpegAudioCopy
+    // } else {
+    //   audioEncoder = new FfmpegAac
+    // }
     const ffmpeg = new FfmpegCommand({
       videoEncoder,
       audioEncoder,
