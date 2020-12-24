@@ -16,6 +16,12 @@ export default class extends Command {
   constructor(options) {
     super(options)
     this.commandOptions = omit(options, ["executablePath", "argv"])
+    if (!this.commandOptions.inputFile) {
+      throw new Error(`No input file given for ffmpeg command with output file ${this.commandOptions.outputFile}`)
+    }
+    if (!this.commandOptions.outputFile) {
+      throw new Error(`No output file given for ffmpeg command with input file ${this.commandOptions.outputFile}`)
+    }
     this.commandGenerator = new FfmpegCommandGenerator(this.commandOptions)
   }
 
