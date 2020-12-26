@@ -1,17 +1,10 @@
 import filenamifyShrink from "filenamify-shrink"
-import findByExtension from "find-by-extension"
-import fs from "fs/promises"
-import globby from "globby"
-import normalizePath from "normalize-path"
 import readableMs from "readable-ms"
-import tempy from "tempy"
 import {ClientCredentialsAuthProvider} from "twitch-auth"
 
-import AutosubCommand from "lib/AutosubCommand"
 import config from "lib/config"
 import {getEncodeSpeedString} from "lib/getEncodeSpeed"
 import logger from "lib/logger"
-import pathJoin from "lib/pathJoin"
 import Probe from "lib/Probe"
 
 import Twitch from "./Twitch"

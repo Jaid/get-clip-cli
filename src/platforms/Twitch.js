@@ -1,18 +1,8 @@
-import fsp from "@absolunet/fsp"
-import fs from "fs/promises"
-import globby from "globby"
 import makeDir from "make-dir"
-import normalizePath from "normalize-path"
-import prettyBytes from "pretty-bytes"
 
 import FfmpegCommand from "lib/FfmpegCommand"
-import logger from "lib/logger"
 import pathJoin from "lib/pathJoin"
-import replaceBasename from "lib/replaceBasename"
-import YouTubeDlCommand from "lib/YouTubeDlCommand"
 
-import FfmpegAac from "src/packages/ffmpeg-args/src/FfmpegAac"
-import FfmpegAudioCopy from "src/packages/ffmpeg-args/src/FfmpegAudioCopy"
 import FfmpegHevc from "src/packages/ffmpeg-args/src/FfmpegHevc"
 import FfmpegOpus from "src/packages/ffmpeg-args/src/FfmpegOpus"
 
