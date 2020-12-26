@@ -103,7 +103,7 @@ export default class extends Twitch {
   async createFromVideo() {
     const outputFolder = this.fromFolder("cut")
     await makeDir(outputFolder)
-    const outputFile = pathJoin(outputFolder, this.getFileName("mkv"))
+    const outputFile = pathJoin(outputFolder, this.getFileName("mp4"))
     const ffmpeg = new FfmpegCommand({
       videoEncoder: new FfmpegHevc,
       audioEncoder: new FfmpegOpus,
@@ -176,31 +176,29 @@ export default class extends Twitch {
       await this.prepareVideo()
     } else {
       logger.warn("Video is not available")
-    }
-    await makeDir(this.folder)
-    this.youtubeDlDataFile = this.fromFolder("download.info.json")
-    this.downloadedFile = await this.getDownloadedVideoFile()
-    if (this.downloadedFile) {
-      logger.warn(`${this.downloadedFile} already exists`)
-      return
-    }
-    // await this.download(this.clipData.url)
-    await this.createFromVideo()
-    const youtubeDlData = await readFileJson(this.youtubeDlDataFile)
-    if (this.downloadedFile) {
-      this.probe = new Probe(this.downloadedFile, this.argv.ffprobePath)
-      await this.probe.run()
-      this.meta.probe = this.probe.toJson()
-    }
-    if (false) {
+      await this.download(this.clipData.url)
+      this.youtubeDlDataFile = this.fromFolder("download", "download.info.json")
+      const youtubeDlData = await readFileJson(this.youtubeDlDataFile)
+      this.meta.youtubeDl = youtubeDlData
       const archiveResult = await this.createArchive()
       const archiveProbe = new Probe(archiveResult.file, this.argv.ffprobePath)
       await archiveProbe.run()
       this.meta.archiveProbe = archiveProbe.toJson()
       logger.info(`Encoded “${this.probe.toString()}” to “${archiveProbe.toString()}” with speed ${getEncodeSpeedString(archiveProbe.duration, archiveResult.runtime)}`)
     }
+    await makeDir(this.folder)
+    this.downloadedFile = await this.getDownloadedVideoFile()
+    if (this.downloadedFile) {
+      logger.warn(`${this.downloadedFile} already exists`)
+      return
+    }
+    await this.createFromVideo()
+    if (this.downloadedFile) {
+      this.probe = new Probe(this.downloadedFile, this.argv.ffprobePath)
+      await this.probe.run()
+      this.meta.probe = this.probe.toJson()
+    }
     this.meta.clip = this.clipData
-    this.meta.youtubeDl = youtubeDlData
     // @ts-ignore
     // eslint-disable-next-line no-underscore-dangle
     this.meta.helixClip = this.helixClip

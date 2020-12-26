@@ -150,10 +150,11 @@ export default class Platform {
 
   /**
    * @param {string} url
+   * @param {string} [folderName="download"]
    * @return {Promise<void>}
    */
-  async download(url) {
-    const downloadFolder = pathJoin(this.folder, "download")
+  async download(url, folderName = "download") {
+    const downloadFolder = pathJoin(this.folder, folderName)
     await makeDir(downloadFolder)
     logger.debug(`Downloading ${url}`)
     const youtubeDl = new YouTubeDlCommand({

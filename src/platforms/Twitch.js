@@ -42,7 +42,7 @@ export default class extends Platform {
   async createArchive() {
     const archiveFolder = this.fromFolder("archive")
     await makeDir(archiveFolder)
-    const ffmpegOutputFile = pathJoin(archiveFolder, this.getFileName("mkv"))
+    const ffmpegOutputFile = pathJoin(archiveFolder, this.getFileName("mp4"))
     const videoEncoder = new FfmpegHevc({
       preset: this.argv.encodePreset,
     })
