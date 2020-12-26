@@ -14,7 +14,6 @@ import Probe from "lib/Probe"
 import secondsToHms from "lib/secondsToHms"
 import TargetUrl from "lib/TargetUrl"
 
-import FfmpegAac from "src/packages/ffmpeg-args/src/FfmpegAac"
 import FfmpegHevc from "src/packages/ffmpeg-args/src/FfmpegHevc"
 import FfmpegOpus from "src/packages/ffmpeg-args/src/FfmpegOpus"
 import TwitchVideo from "src/platforms/TwitchVideo"
@@ -98,11 +97,13 @@ export default class extends Twitch {
     this.videoPlatform = new TwitchVideo(videoUrl, this.argv, {
       helixVideo: this.helixVideo,
     })
-    await this.videoPlatform.run()
+    await this.videoPlatform.start()
   }
 
   async createFromVideo() {
-    const outputFile = pathJoin(this.folder, "a.mkv")
+    const outputFolder = this.fromFolder("cut")
+    await makeDir(outputFolder)
+    const outputFile = pathJoin(outputFolder, this.getFileName("mkv"))
     const ffmpeg = new FfmpegCommand({
       videoEncoder: new FfmpegHevc,
       audioEncoder: new FfmpegOpus,
@@ -116,8 +117,10 @@ export default class extends Twitch {
     await ffmpeg.run()
   }
 
-  async run() {
-    this.meta = {}
+  /**
+   * @return Promise<void>
+   */
+  async beforeRun() {
     const authProvider = new ClientCredentialsAuthProvider(config.twitchClientId, config.twitchClientSecret)
     const apiClient = new ApiClient({authProvider})
     const [helixClip, krakenClip] = await Promise.all([
@@ -145,9 +148,25 @@ export default class extends Twitch {
       gameTitle: this.krakenClip.game,
       duration: this.krakenClip.duration * 1000,
     }
+  }
+
+  /**
+   * @return {string}
+   */
+  getFolder() {
+    return this.fromStorageDirectory("twitch", this.clipData.streamerId, "clips", this.clipData.id)
+  }
+
+  /**
+   * @return {string}
+   */
+  getFileBase() {
+    return this.clipData.titleNormalized
+  }
+
+  async run() {
     logger.info(`Clip: ${this.clipData.title} (${readableMs(this.clipData.duration)})`)
     logger.info(`Clipped by ${this.clipData.clipperTitle} for ${this.clipData.streamerTitle} during ${this.clipData.gameTitle}`)
-    this.videoFileBase = this.clipData.titleNormalized
     if (this.krakenClip.vod) {
       this.hasVideo = true
       this.clipData.offset = this.krakenClip.vod.offset * 1000
@@ -158,10 +177,9 @@ export default class extends Twitch {
     } else {
       logger.warn("Video is not available")
     }
-    this.folder = pathJoin(this.argv.storageDirectory, "twitch", this.clipData.streamerId, "clips", this.clipData.id)
     await makeDir(this.folder)
-    this.youtubeDlDataFile = pathJoin(this.folder, "download.info.json")
-    this.downloadedFile = await this.getDownloadedVideo()
+    this.youtubeDlDataFile = this.fromFolder("download.info.json")
+    this.downloadedFile = await this.getDownloadedVideoFile()
     if (this.downloadedFile) {
       logger.warn(`${this.downloadedFile} already exists`)
       return

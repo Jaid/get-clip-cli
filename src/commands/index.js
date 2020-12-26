@@ -21,5 +21,5 @@ export default async argv => {
   logger.info(`Target URL: ${argv.url}`)
   const targetUrl = new TargetUrl(argv.url)
   const platform = new platformMap[targetUrl.type](targetUrl, argv)
-  await platform.run()
+  await platform.start()
 }

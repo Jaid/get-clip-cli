@@ -2,6 +2,7 @@ import filenamifyShrink from "filenamify-shrink"
 import findByExtension from "find-by-extension"
 import fs from "fs/promises"
 import globby from "globby"
+import normalizePath from "normalize-path"
 import readableMs from "readable-ms"
 import tempy from "tempy"
 import {ClientCredentialsAuthProvider} from "twitch-auth"
@@ -31,22 +32,8 @@ import Twitch from "./Twitch"
  * @prop {string} ownerId
  * @prop {string} ownerTitle
  * @prop {string} id
+ * @prop {string} ownerNameNormalized
  */
-
-/**
- * @param {string} folder
- * @return {Promise<string|null>}
- */
-async function getSrtFile(folder) {
-  const files = await globby(["autosub.*.srt"], {
-    cwd: folder,
-    absolute: true,
-  })
-  if (files.length) {
-    return files[0]
-  }
-  return null
-}
 
 export default class extends Twitch {
 
@@ -60,36 +47,17 @@ export default class extends Twitch {
    */
   videoData = null
 
-  async createSubtitles() {
-    const tempFolder = tempy.directory({
-      prefix: "autosub-",
-    })
-    logger.debug(`Using temp folder: ${tempFolder}`)
-    const autosub = new AutosubCommand({
-      executablePath: this.argv.autosubPath,
-      argv: this.argv,
-      inputFile: this.downloadedFile,
-      outputFile: pathJoin(tempFolder, "autosub"),
-      format: "srt",
-      speechLanguage: this.argv.autosubLanguage,
-      additionalOutputFiles: "full-src",
-    })
-    await autosub.run()
-    const tempSrtFile = await getSrtFile(tempFolder)
-    const srtFile = pathJoin(this.folder, "autosub.srt")
-    const autosubSourceFile = pathJoin(this.folder, "autosub.json")
-    const tempAutosubSourceFile = findByExtension("json", {
-      cwd: tempFolder,
-      absolute: true,
-    })
-    await Promise.all([
-      fs.copyFile(tempSrtFile, srtFile),
-      // @ts-ignore
-      fs.copyFile(tempAutosubSourceFile, autosubSourceFile),
-    ])
+  /**
+   * @return {string}
+   */
+  getFolder() {
+    return this.fromStorageDirectory("twitch", this.videoData.ownerNameNormalized, "videos", this.videoData.id)
   }
 
-  async run() {
+  /**
+   * @return {Promise<void>}
+   */
+  async beforeRun() {
     if (this.options.helixVideo) {
       this.helixVideo = this.options.helixVideo
     } else {
@@ -110,18 +78,30 @@ export default class extends Twitch {
       description: this.helixVideo.description.trim(),
       ownerId: this.helixVideo.userId,
       ownerTitle: this.helixVideo.userDisplayName,
+      ownerNameNormalized: this.helixVideo.userDisplayName.toLowerCase(),
       id: this.helixVideo.id,
     }
+  }
+
+  /**
+   * @return {string}
+   */
+  getFileBase() {
+    return this.videoData.titleNormalized
+  }
+
+  async run() {
     logger.info(`Video: ${this.videoData.title} (${readableMs(this.videoData.duration)})`)
-    this.videoFileBase = this.videoData.titleNormalized
-    const ownerName = this.videoData.ownerTitle.toLowerCase()
-    this.folder = pathJoin(this.argv.storageDirectory, "twitch", ownerName, "videos", this.videoData.id)
     await this.download(this.videoData.url)
     this.probe = new Probe(this.downloadedFile, this.argv.ffprobePath)
     await this.probe.run()
     const [archiveResult] = await Promise.all([
       this.createArchive(),
-      this.createSubtitles(),
+      this.createSubtitles({
+        autosubOptions: {
+          inputFile: this.downloadedFile,
+        },
+      }),
     ])
     const archiveProbe = new Probe(archiveResult.file, this.argv.ffprobePath)
     await archiveProbe.run()
@@ -131,7 +111,6 @@ export default class extends Twitch {
     this.meta.probe = this.probe.toJson()
     this.meta.archiveProbe = archiveProbe.toJson()
     logger.info(`Encoded “${this.probe.toString()}” to “${archiveProbe.toString()}” with speed ${getEncodeSpeedString(this.probe.duration, archiveResult.runtime)}`)
-    await this.dumpMeta()
   }
 
 }
