@@ -9,13 +9,12 @@ import config from "lib/config"
 import FfmpegCommand from "lib/FfmpegCommand"
 import {getEncodeSpeedString} from "lib/getEncodeSpeed"
 import logger from "lib/logger"
+import {makeHevcEncoder, makeOpusEncoder} from "lib/makeEncoder"
 import pathJoin from "lib/pathJoin"
 import Probe from "lib/Probe"
 import secondsToHms from "lib/secondsToHms"
 import TargetUrl from "lib/TargetUrl"
 
-import FfmpegHevc from "src/packages/ffmpeg-args/src/FfmpegHevc"
-import FfmpegOpus from "src/packages/ffmpeg-args/src/FfmpegOpus"
 import TwitchVideo from "src/platforms/TwitchVideo"
 
 import Twitch from "./Twitch"
@@ -105,8 +104,8 @@ export default class extends Twitch {
     await makeDir(outputFolder)
     const outputFile = pathJoin(outputFolder, this.getFileName("mp4"))
     const ffmpeg = new FfmpegCommand({
-      videoEncoder: new FfmpegHevc,
-      audioEncoder: new FfmpegOpus,
+      videoEncoder: makeHevcEncoder(this.argv),
+      audioEncoder: makeOpusEncoder(this.argv),
       inputFile: this.videoPlatform.downloadedFile,
       outputFile,
       argv: this.argv,

@@ -52,7 +52,7 @@ export default class extends FfmpegVideoEncoder {
       args.push("-deadline")
       args.push(this.options.deadline)
     }
-    if (this.options.quality) {
+    if (this.options.quality !== undefined) {
       args.push("-crf")
       args.push(String(this.options.quality))
       args.push("-b:v")

@@ -47,11 +47,11 @@ export default class extends FfmpegAudioEncoder {
       args.push("-vbr")
       args.push("0")
     }
-    if (this.options.compressionLevel) {
+    if (this.options.compressionLevel !== undefined) {
       args.push("-compression_level")
       args.push(String(this.options.compressionLevel))
     }
-    if (this.options.frameDuration) {
+    if (this.options.frameDuration !== undefined) {
       args.push("-frame_duration")
       args.push(String(this.options.frameDuration))
     }

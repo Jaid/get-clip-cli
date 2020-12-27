@@ -1,10 +1,8 @@
 import makeDir from "make-dir"
 
 import FfmpegCommand from "lib/FfmpegCommand"
+import {makeHevcEncoder, makeOpusEncoder} from "lib/makeEncoder"
 import pathJoin from "lib/pathJoin"
-
-import FfmpegHevc from "src/packages/ffmpeg-args/src/FfmpegHevc"
-import FfmpegOpus from "src/packages/ffmpeg-args/src/FfmpegOpus"
 
 import Platform from "."
 
@@ -43,10 +41,8 @@ export default class extends Platform {
     const archiveFolder = this.fromFolder("archive")
     await makeDir(archiveFolder)
     const ffmpegOutputFile = pathJoin(archiveFolder, this.getFileName("mp4"))
-    const videoEncoder = new FfmpegHevc({
-      preset: this.argv.encodePreset,
-    })
-    const audioEncoder = new FfmpegOpus
+    const videoEncoder = makeHevcEncoder(this.argv)
+    const audioEncoder = makeOpusEncoder(this.argv)
     const ffmpeg = new FfmpegCommand({
       videoEncoder,
       audioEncoder,

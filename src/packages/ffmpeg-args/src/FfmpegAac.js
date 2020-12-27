@@ -29,7 +29,7 @@ export default class extends FfmpegAudioEncoder {
   toArgs() {
     const args = super.toArgs()
     args.push("libfdk_aac")
-    if (this.options.quality) {
+    if (this.options.quality !== undfined) {
       args.push("-vbr")
       args.push(String(this.options.quality))
     }

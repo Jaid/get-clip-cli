@@ -18,7 +18,11 @@ export default class extends FfmpegVideoEncoder {
    */
   constructor(options) {
     super()
-    this.options = options || {}
+    const defaultOptions = {}
+    this.options = {
+      ...defaultOptions,
+      ...options,
+    }
   }
 
   /**
@@ -31,7 +35,7 @@ export default class extends FfmpegVideoEncoder {
       args.push("-preset")
       args.push(this.options.preset)
     }
-    if (this.options.quality) {
+    if (this.options.quality !== undefined) {
       args.push("-quality")
       args.push(String(this.options.quality))
     }

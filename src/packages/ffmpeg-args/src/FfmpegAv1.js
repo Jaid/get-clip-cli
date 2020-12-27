@@ -47,7 +47,7 @@ export default class extends FfmpegVideoEncoder {
       args.push("-tiles")
       args.push(this.options.tiles)
     }
-    if (this.options.quality) {
+    if (this.options.quality !== undefined) {
       args.push("-crf")
       args.push(String(this.options.quality))
       args.push("-b:v")

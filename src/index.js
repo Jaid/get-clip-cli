@@ -15,6 +15,7 @@ import handleInfoCommand from "src/commands/info"
  * @prop {string} storageDirectory
  * @prop {string} autosubLanguage
  * @prop {string} encodePreset
+ * @prop {boolean} encodeFast
  */
 
 /**
@@ -54,6 +55,10 @@ const commandBuilder = {
   "encode-preset": {
     description: "General encode preset",
     type: "string",
+  },
+  "encode-fast": {
+    description: "Automatically decide a fast encode preset",
+    type: "boolean",
   },
 }
 
