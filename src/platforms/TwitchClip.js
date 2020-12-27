@@ -148,6 +148,8 @@ export default class extends Twitch {
       gameTitle: this.krakenClip.game,
       duration: this.krakenClip.duration * 1000,
     }
+    logger.info(`Clip: ${this.clipData.title} (${readableMs(this.clipData.duration)})`)
+    logger.info(`Clipped by ${this.clipData.clipperTitle} for ${this.clipData.streamerTitle} during ${this.clipData.gameTitle}`)
   }
 
   /**
@@ -165,8 +167,6 @@ export default class extends Twitch {
   }
 
   async run() {
-    logger.info(`Clip: ${this.clipData.title} (${readableMs(this.clipData.duration)})`)
-    logger.info(`Clipped by ${this.clipData.clipperTitle} for ${this.clipData.streamerTitle} during ${this.clipData.gameTitle}`)
     if (this.krakenClip.vod) {
       this.hasVideo = true
       this.clipData.offset = this.krakenClip.vod.offset * 1000
