@@ -11,6 +11,7 @@ import tempy from "tempy"
 import AutosubCommand from "lib/AutosubCommand"
 import findSrtFile from "lib/findSrtFile"
 import logger from "lib/logger"
+import makeYoutubeDlCommand from "lib/makeYoutubeDlCommand"
 import pathJoin from "lib/pathJoin"
 import replaceBasename from "lib/replaceBasename"
 import YouTubeDlCommand from "lib/YouTubeDlCommand"
@@ -157,14 +158,18 @@ export default class Platform {
     const downloadFolder = pathJoin(this.folder, folderName)
     await makeDir(downloadFolder)
     logger.debug(`Downloading ${url}`)
-    const youtubeDl = new YouTubeDlCommand({
+    /**
+     * @type {import("src/lib/Command").Options & import("src/lib/YouTubeDlCommand").CommandOptions}
+     */
+    const youtubeDlOptions = {
       url,
       executablePath: this.argv.youtubeDlPath,
       argv: this.argv,
       outputFile: pathJoin(downloadFolder, "download.%(ext)s"),
       writeInfoJson: true,
       callHome: false,
-    })
+    }
+    const youtubeDl = makeYoutubeDlCommand(this.argv, youtubeDlOptions)
     await youtubeDl.run()
     this.downloadedFile = await this.getDownloadedVideoFile()
     if (!this.downloadedFile) {

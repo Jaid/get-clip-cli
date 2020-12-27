@@ -16,6 +16,7 @@ import handleInfoCommand from "src/commands/info"
  * @prop {string} autosubLanguage
  * @prop {string} encodePreset
  * @prop {boolean} encodeFast
+ * @prop {boolean} smallDownload
  */
 
 /**
@@ -58,6 +59,10 @@ const commandBuilder = {
   },
   "encode-fast": {
     description: "Automatically decide a fast encode preset",
+    type: "boolean",
+  },
+  "small-download": {
+    description: "Choose the smallest available files for download",
     type: "boolean",
   },
 }
