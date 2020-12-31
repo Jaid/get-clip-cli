@@ -51,7 +51,7 @@ export default class Platform {
    * @param {import("yargs").Arguments<import("src").Options>} argv
    * @param {object} [options]
    */
-  constructor(targetUrl, argv, options) {
+  constructor(targetUrl, argv, options = {}) {
     logger.info(`[${targetUrl.type}] Handling ${targetUrl.url}`)
     this.targetUrl = targetUrl
     this.argv = argv
@@ -165,6 +165,7 @@ export default class Platform {
    * @typedef {object} DownloadOptions
    * @prop {string} [folderName="download"]
    * @prop {boolean} [probe]
+   * @prop {boolean} [autosub]
    */
 
   /**
@@ -179,6 +180,7 @@ export default class Platform {
     const options = {
       folderName: "download",
       probe: false,
+      autosub: false,
       ...downloadOptions,
     }
     const downloadFolder = pathJoin(this.folder, options.folderName)
@@ -200,6 +202,9 @@ export default class Platform {
     let downloadedFile = await this.getDownloadedVideoFile()
     if (!downloadedFile) {
       throw new Error(`Something went wrong. youtube-dl did run, but there is no downloaded file in “${this.folder}”.`)
+    }
+    if (options.autosub) {
+      await this.createSubtitles(downloadedFile)
     }
     const renamedFile = replaceBasename(downloadedFile, this.fileBase)
     if (renamedFile === downloadedFile) {

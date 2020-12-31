@@ -1,11 +1,11 @@
 import filenamifyShrink from "filenamify-shrink"
 import readableMs from "readable-ms"
+import {ApiClient} from "twitch"
 import {ClientCredentialsAuthProvider} from "twitch-auth"
 
 import config from "lib/config"
 import {getEncodeSpeedString} from "lib/getEncodeSpeed"
 import logger from "lib/logger"
-import Probe from "lib/Probe"
 
 import Platform from "."
 
@@ -55,7 +55,8 @@ export default class extends Platform {
       this.helixVideo = this.options.helixVideo
     } else {
       const authProvider = new ClientCredentialsAuthProvider(config.twitchClientId, config.twitchClientSecret)
-      // const apiClient = new ApiClient({authProvider})
+      const apiClient = new ApiClient({authProvider})
+      this.helixVideo = await apiClient.helix.videos.getVideoById(this.targetUrl.videoId)
     }
     this.videoData = {
       duration: this.helixVideo.durationInSeconds * 1000,
@@ -87,14 +88,12 @@ export default class extends Platform {
     logger.info(`Video: ${this.videoData.title} (${readableMs(this.videoData.duration)})`)
     const downloadResult = await this.download(this.videoData.url, {
       probe: true,
+      autosub: true,
     })
-    const [createArchiveResult, autosubResult] = await Promise.all([
-      this.recode({
-        inputFile: downloadResult.downloadedFile,
-        probe: true,
-      }),
-      this.createSubtitles(downloadResult.downloadedFile),
-    ])
+    const createArchiveResult = await this.recode({
+      inputFile: downloadResult.downloadedFile,
+      probe: true,
+    })
     // @ts-ignore
     // eslint-disable-next-line no-underscore-dangle
     this.meta.helixVideo = this.helixVideo._data

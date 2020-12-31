@@ -2,12 +2,14 @@ import logger from "lib/logger"
 import TargetUrl from "lib/TargetUrl"
 
 import TwitchClip from "src/platforms/TwitchClip"
+import TwitchVideo from "src/platforms/TwitchVideo"
 
 const platformMap = {
   twitchClip: TwitchClip,
+  twitchVideo: TwitchVideo,
 }
 
-const testUrl = "https://clips.twitch.tv/SassyAgreeableRutabagaDancingBanana" // Lea Diablo (short)
+const testUrl = "https://www.twitch.tv/videos/712407540?filter=archives&sort=time" // Lea Diablo (short)
 // const testUrl = "https://www.twitch.tv/jaidchen/clip/FrailPreciousSalmonSaltBae" // Jaidchen Testi (mine)
 
 /**
