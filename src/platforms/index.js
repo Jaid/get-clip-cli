@@ -9,10 +9,13 @@ import sureArray from "sure-array"
 import tempy from "tempy"
 
 import AutosubCommand from "lib/AutosubCommand"
+import FfmpegCommand from "lib/FfmpegCommand"
 import findSrtFile from "lib/findSrtFile"
 import logger from "lib/logger"
+import {makeHevcEncoder, makeOpusEncoder} from "lib/makeEncoder"
 import makeYoutubeDlCommand from "lib/makeYoutubeDlCommand"
 import pathJoin from "lib/pathJoin"
+import Probe from "lib/Probe"
 import replaceBasename from "lib/replaceBasename"
 import YouTubeDlCommand from "lib/YouTubeDlCommand"
 
@@ -150,12 +153,35 @@ export default class Platform {
   }
 
   /**
-   * @param {string} url
-   * @param {string} [folderName="download"]
-   * @return {Promise<void>}
+   * @typedef {object} DownloadResult
+   * @prop {string} downloadFolder
+   * @prop {string} downloadedFile
+   * @prop {import("fs").Stats} downloadedFileStat
+   * @prop {import("execa").ExecaReturnValue} youtubeDlResult
+   * @prop {import("lib/Probe").default} [probe]
    */
-  async download(url, folderName = "download") {
-    const downloadFolder = pathJoin(this.folder, folderName)
+
+  /**
+   * @typedef {object} DownloadOptions
+   * @prop {string} [folderName="download"]
+   * @prop {boolean} [probe]
+   */
+
+  /**
+   * @param {string} url
+   * @param {DownloadOptions} [downloadOptions]
+   * @return {Promise<DownloadResult>}
+   */
+  async download(url, downloadOptions) {
+    /**
+     * @type {DownloadOptions}
+     */
+    const options = {
+      folderName: "download",
+      probe: false,
+      ...downloadOptions,
+    }
+    const downloadFolder = pathJoin(this.folder, options.folderName)
     await makeDir(downloadFolder)
     logger.debug(`Downloading ${url}`)
     /**
@@ -170,21 +196,33 @@ export default class Platform {
       callHome: false,
     }
     const youtubeDl = makeYoutubeDlCommand(this.argv, youtubeDlOptions)
-    await youtubeDl.run()
-    this.downloadedFile = await this.getDownloadedVideoFile()
-    if (!this.downloadedFile) {
+    const youtubeDlResult = await youtubeDl.run()
+    let downloadedFile = await this.getDownloadedVideoFile()
+    if (!downloadedFile) {
       throw new Error(`Something went wrong. youtube-dl did run, but there is no downloaded file in “${this.folder}”.`)
     }
-    const renamedFile = replaceBasename(this.downloadedFile, this.fileBase)
-    if (renamedFile === this.downloadedFile) {
-      logger.debug(`Nothing better to rename to, so we will keep the download file name “${this.downloadedFile}”`)
+    const renamedFile = replaceBasename(downloadedFile, this.fileBase)
+    if (renamedFile === downloadedFile) {
+      logger.debug(`Nothing better to rename to, so we will keep the download file name “${downloadedFile}”`)
     } else {
-      logger.debug(`Renaming ${this.downloadedFile} to ${renamedFile}`)
-      await fs.rename(this.downloadedFile, renamedFile)
-      this.downloadedFile = renamedFile
+      logger.debug(`Renaming ${downloadedFile} to ${renamedFile}`)
+      await fs.rename(downloadedFile, renamedFile)
+      downloadedFile = renamedFile
     }
-    const downloadedFileStat = await fs.stat(this.downloadedFile)
-    logger.info(`Downloaded ${this.downloadedFile} (${prettyBytes(downloadedFileStat.size)})`)
+    const downloadedFileStat = await fs.stat(downloadedFile)
+    logger.info(`Downloaded ${downloadedFile} (${prettyBytes(downloadedFileStat.size)})`)
+    const result = {
+      downloadFolder,
+      downloadedFile,
+      downloadedFileStat,
+      youtubeDlResult,
+    }
+    if (options.probe) {
+      const probe = new Probe(downloadedFile, this.argv.ffprobePath)
+      await probe.run()
+      result.probe = probe
+    }
+    return result
   }
 
   /**
@@ -193,11 +231,11 @@ export default class Platform {
    */
 
   /**
+   * @param {string} inputFile
    * @param {CreateSubtitlesOptions} [options]
    * @return {Promise<void>}
    */
-  async createSubtitles(options) {
-    const inputFile = options.autosubOptions?.inputFile || this.downloadedFile
+  async createSubtitles(inputFile, options) {
     const tempFolder = normalizePath(tempy.directory({
       prefix: "autosub-",
     }))
@@ -210,6 +248,7 @@ export default class Platform {
       format: "srt",
       speechLanguage: this.argv.autosubLanguage,
       additionalOutputFiles: "full-src",
+      ...options,
     })
     const autosubFolder = this.fromFolder("autosub")
     await Promise.all([
@@ -228,6 +267,61 @@ export default class Platform {
       // @ts-ignore
       fs.copyFile(tempAutosubSourceFile, autosubSourceFile),
     ])
+  }
+
+  /**
+   * @typedef {object} RecodeOptions
+   * @prop {string} inputFile
+   * @prop {string} [outputName="archive"]
+   * @prop {import("src/packages/ffmpeg-args/src/index").CommandOptions & import("lib/Command").Options} [ffmpegOptions]
+   * @prop {string} [fileExtension="mp4"]
+   * @prop {boolean} probe
+   */
+
+  /**
+   * @typedef {object} RecodeResult
+   * @prop {number} runtime
+   * @prop {string} file
+   * @prop {import("lib/Probe").default} [probe]
+   */
+
+  /**
+   * @param {RecodeOptions} [options]
+   * @return {Promise<RecodeResult>}
+   */
+  async recode(options) {
+    const mergedOptions = {
+      outputName: "archive",
+      fileExtension: "mp4",
+      ...options,
+    }
+    const archiveFolder = this.fromFolder(mergedOptions.outputName)
+    await makeDir(archiveFolder)
+    const ffmpegOutputFile = pathJoin(archiveFolder, this.getFileName(mergedOptions.fileExtension))
+    const videoEncoder = makeHevcEncoder(this.argv)
+    const audioEncoder = makeOpusEncoder(this.argv)
+    const ffmpeg = new FfmpegCommand({
+      inputFile: mergedOptions.inputFile,
+      videoEncoder,
+      audioEncoder,
+      executablePath: this.argv.ffmpegPath,
+      argv: this.argv,
+      outputFile: ffmpegOutputFile,
+      hwAccel: "auto",
+      ...mergedOptions.ffmpegOptions,
+    })
+    const startTime = Date.now()
+    await ffmpeg.run()
+    const result = {
+      runtime: Date.now() - startTime,
+      file: ffmpegOutputFile,
+    }
+    if (options.probe) {
+      const probe = new Probe(ffmpegOutputFile, this.argv.ffprobePath)
+      await probe.run()
+      result.probe = probe
+    }
+    return result
   }
 
 }

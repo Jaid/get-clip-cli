@@ -7,7 +7,7 @@ import {getEncodeSpeedString} from "lib/getEncodeSpeed"
 import logger from "lib/logger"
 import Probe from "lib/Probe"
 
-import Twitch from "./Twitch"
+import Platform from "."
 
 /**
  * @typedef {object} VideoData
@@ -28,7 +28,7 @@ import Twitch from "./Twitch"
  * @prop {string} ownerNameNormalized
  */
 
-export default class extends Twitch {
+export default class extends Platform {
 
   /**
    * @type {import("twitch").HelixVideo}
@@ -85,25 +85,23 @@ export default class extends Twitch {
 
   async run() {
     logger.info(`Video: ${this.videoData.title} (${readableMs(this.videoData.duration)})`)
-    await this.download(this.videoData.url)
-    this.probe = new Probe(this.downloadedFile, this.argv.ffprobePath)
-    await this.probe.run()
-    const [archiveResult] = await Promise.all([
-      this.createArchive(),
-      this.createSubtitles({
-        autosubOptions: {
-          inputFile: this.downloadedFile,
-        },
+    const downloadResult = await this.download(this.videoData.url, {
+      probe: true,
+    })
+    const [createArchiveResult, autosubResult] = await Promise.all([
+      this.recode({
+        inputFile: downloadResult.downloadedFile,
+        probe: true,
       }),
+      this.createSubtitles(downloadResult.downloadedFile),
     ])
-    const archiveProbe = new Probe(archiveResult.file, this.argv.ffprobePath)
-    await archiveProbe.run()
     // @ts-ignore
     // eslint-disable-next-line no-underscore-dangle
     this.meta.helixVideo = this.helixVideo._data
-    this.meta.probe = this.probe.toJson()
-    this.meta.archiveProbe = archiveProbe.toJson()
-    logger.info(`Encoded “${this.probe.toString()}” to “${archiveProbe.toString()}” with speed ${getEncodeSpeedString(this.probe.duration, archiveResult.runtime)}`)
+    this.meta.probe = downloadResult.probe.toJson()
+    this.meta.archiveProbe = createArchiveResult.probe.toJson()
+    this.meta.downloadedFile = downloadResult.downloadedFile
+    logger.info(`Encoded “${downloadResult.probe.toString()}” to “${createArchiveResult.probe.toString()}” with speed ${getEncodeSpeedString(downloadResult.probe.duration, createArchiveResult.runtime)}`)
   }
 
 }

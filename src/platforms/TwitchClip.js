@@ -17,7 +17,7 @@ import TargetUrl from "lib/TargetUrl"
 
 import TwitchVideo from "src/platforms/TwitchVideo"
 
-import Twitch from "./Twitch"
+import Platform from "."
 
 /**
  * @typedef {object} KrakenVod
@@ -39,12 +39,6 @@ import Twitch from "./Twitch"
  */
 
 /**
- * @typedef {object} ArchiveResult
- * @prop {number} runtime
- * @prop {string} file
- */
-
-/**
  * @param {string} url
  * @return {string}
  */
@@ -53,7 +47,7 @@ function getClipIdFromThumbnailUrl(url) {
   return regex.exec(url).groups.id
 }
 
-export default class extends Twitch {
+export default class extends Platform {
 
   /**
    * @type {string}
@@ -104,10 +98,10 @@ export default class extends Twitch {
     await makeDir(outputFolder)
     const outputFile = pathJoin(outputFolder, this.getFileName("mp4"))
     const ffmpeg = new FfmpegCommand({
+      outputFile,
       videoEncoder: makeHevcEncoder(this.argv),
       audioEncoder: makeOpusEncoder(this.argv),
-      inputFile: this.videoPlatform.downloadedFile,
-      outputFile,
+      inputFile: this.videoPlatform.meta.downloadedFile,
       argv: this.argv,
       executablePath: this.argv.ffmpegPath,
       startTime: this.clipData.offset,
@@ -166,6 +160,12 @@ export default class extends Twitch {
   }
 
   async run() {
+    const alreadyDownloadedFile = await this.getDownloadedVideoFile()
+    if (alreadyDownloadedFile) {
+      logger.warn(`${alreadyDownloadedFile} already exists`)
+      return
+    }
+    let downloadedFile
     if (this.krakenClip.vod) {
       this.hasVideo = true
       this.clipData.offset = this.krakenClip.vod.offset * 1000
@@ -175,25 +175,24 @@ export default class extends Twitch {
       await this.prepareVideo()
     } else {
       logger.warn("Video is not available")
-      await this.download(this.clipData.url)
+      const downloadResult = await this.download(this.clipData.url, {
+        probe: true,
+      })
+      downloadedFile = downloadResult.downloadedFile
       this.youtubeDlDataFile = this.fromFolder("download", "download.info.json")
       const youtubeDlData = await readFileJson(this.youtubeDlDataFile)
       this.meta.youtubeDl = youtubeDlData
-      const archiveResult = await this.createArchive()
-      const archiveProbe = new Probe(archiveResult.file, this.argv.ffprobePath)
-      await archiveProbe.run()
-      this.meta.archiveProbe = archiveProbe.toJson()
-      logger.info(`Encoded “${this.probe.toString()}” to “${archiveProbe.toString()}” with speed ${getEncodeSpeedString(archiveProbe.duration, archiveResult.runtime)}`)
+      const archiveResult = await this.recode({
+        inputFile: downloadedFile,
+        probe: true,
+      })
+      this.meta.archiveProbe = archiveResult.probe.toJson()
+      logger.info(`Encoded “${this.probe.toString()}” to “${archiveResult.probe.toString()}” with speed ${getEncodeSpeedString(archiveResult.probe.duration, archiveResult.runtime)}`)
     }
     await makeDir(this.folder)
-    this.downloadedFile = await this.getDownloadedVideoFile()
-    if (this.downloadedFile) {
-      logger.warn(`${this.downloadedFile} already exists`)
-      return
-    }
     await this.createFromVideo()
-    if (this.downloadedFile) {
-      this.probe = new Probe(this.downloadedFile, this.argv.ffprobePath)
+    if (downloadedFile) {
+      this.probe = new Probe(downloadedFile, this.argv.ffprobePath)
       await this.probe.run()
       this.meta.probe = this.probe.toJson()
     }
