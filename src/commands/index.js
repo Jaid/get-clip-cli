@@ -9,7 +9,8 @@ const platformMap = {
   twitchVideo: TwitchVideo,
 }
 
-const testUrl = "https://www.twitch.tv/videos/712407540?filter=archives&sort=time" // Lea Diablo (short)
+const testUrl = "https://clips.twitch.tv/SassyAgreeableRutabagaDancingBanana" // Lea Diablo (short)
+// const testUrl = "https://www.twitch.tv/videos/712407540?filter=archives&sort=time" test video
 // const testUrl = "https://www.twitch.tv/jaidchen/clip/FrailPreciousSalmonSaltBae" // Jaidchen Testi (mine)
 
 /**
