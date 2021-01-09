@@ -5,6 +5,7 @@ import globby from "globby"
 import makeDir from "make-dir"
 import normalizePath from "normalize-path"
 import prettyBytes from "pretty-bytes"
+import statSize from "stat-size"
 import sureArray from "sure-array"
 import tempy from "tempy"
 
@@ -156,7 +157,8 @@ export default class Platform {
    * @typedef {object} DownloadResult
    * @prop {string} downloadFolder
    * @prop {string} downloadedFile
-   * @prop {import("fs").Stats} downloadedFileStat
+   * @prop {number} downloadedFileSize
+   * @prop {string} downloadedFileSizeText
    * @prop {import("execa").ExecaReturnValue} youtubeDlResult
    * @prop {import("lib/Probe").default} [probe]
    */
@@ -214,12 +216,14 @@ export default class Platform {
       await fs.rename(downloadedFile, renamedFile)
       downloadedFile = renamedFile
     }
-    const downloadedFileStat = await fs.stat(downloadedFile)
-    logger.info(`Downloaded ${downloadedFile} (${prettyBytes(downloadedFileStat.size)})`)
+    const downloadedFileSize = await statSize(downloadedFile)
+    const downloadedFileSizeText = prettyBytes(downloadedFileSize)
+    logger.info(`Downloaded ${downloadedFile} (${downloadedFileSizeText})`)
     const result = {
       downloadFolder,
       downloadedFile,
-      downloadedFileStat,
+      downloadedFileSize,
+      downloadedFileSizeText,
       youtubeDlResult,
     }
     if (options.probe) {

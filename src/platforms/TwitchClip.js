@@ -110,6 +110,25 @@ export default class extends Platform {
     await ffmpeg.run()
   }
 
+  async createFromVideoLonger(moreSeconds = 30) {
+    const outputFolder = this.fromFolder(`cut_plus_${moreSeconds}s`)
+    await makeDir(outputFolder)
+    const outputFile = pathJoin(outputFolder, this.getFileName("mp4"))
+    const startTime = this.clipData.offset - moreSeconds * 1000
+    const length = this.clipData.duration + moreSeconds * 2000
+    const ffmpeg = new FfmpegCommand({
+      outputFile,
+      videoEncoder: makeHevcEncoder(this.argv),
+      audioEncoder: makeOpusEncoder(this.argv),
+      inputFile: this.videoPlatform.meta.downloadedFile,
+      argv: this.argv,
+      executablePath: this.argv.ffmpegPath,
+      startTime,
+      length,
+    })
+    await ffmpeg.run()
+  }
+
   /**
    * @return Promise<void>
    */
@@ -191,6 +210,7 @@ export default class extends Platform {
     }
     await makeDir(this.folder)
     await this.createFromVideo()
+    await this.createFromVideoLonger()
     if (downloadedFile) {
       this.probe = new Probe(downloadedFile, this.argv.ffprobePath)
       await this.probe.run()

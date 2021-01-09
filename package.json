@@ -21,6 +21,8 @@
     "read-file-json": "^1.0.2",
     "readable-ms": "^2.0.4",
     "replace-basename": "^1.1.0",
+    "stat-size": "^1.0.2",
+    "stat-size-text": "^1.0.0",
     "string.prototype.replaceall": "^1.0.4",
     "sure-array": "^1.0.0",
     "tempy": "^1.0.0",
