@@ -1,9 +1,9 @@
 import execa from "execa"
 import {pick} from "lodash"
 import readableMs from "readable-ms"
+import Stoppuhr from "stoppuhr"
 
 import logger from "./logger"
-
 /**
  * @typedef {object} Options
  * @prop {string} executablePath
@@ -50,10 +50,9 @@ export default class Command {
     await this.beforeRun()
     const commandArguments = this.buildArguments(additionalOptions)
     logger.debug(`${this.options.executablePath} ${commandArguments.join(" ")}`)
-    const startTime = Date.now()
+    const stoppuhr = new Stoppuhr
     const result = await execa(this.options.executablePath, commandArguments)
-    const endTime = Date.now()
-    logger.debug(`Returned ${result.exitCode} in ${readableMs(endTime - startTime)}`)
+    logger.debug(`Returned ${result.exitCode} in ${stoppuhr.totalText()}`)
     await this.afterRun(result)
     return result
   }

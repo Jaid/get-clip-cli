@@ -10,6 +10,7 @@ import sureArray from "sure-array"
 import tempy from "tempy"
 
 import AutosubCommand from "lib/AutosubCommand"
+import {purpleColor} from "lib/colors"
 import FfmpegCommand from "lib/FfmpegCommand"
 import findSrtFile from "lib/findSrtFile"
 import logger from "lib/logger"
@@ -53,7 +54,7 @@ export default class Platform {
    * @param {object} [options]
    */
   constructor(targetUrl, argv, options = {}) {
-    logger.info(`[${targetUrl.type}] Handling ${targetUrl.url}`)
+    logger.info(purpleColor(`[${targetUrl.type}] Handling ${targetUrl.url}`))
     this.targetUrl = targetUrl
     this.argv = argv
     this.options = options

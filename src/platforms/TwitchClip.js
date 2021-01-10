@@ -5,6 +5,7 @@ import readableMs from "readable-ms"
 import {ApiClient} from "twitch"
 import {ClientCredentialsAuthProvider} from "twitch-auth"
 
+import {propertyColor} from "lib/colors"
 import config from "lib/config"
 import FfmpegCommand from "lib/FfmpegCommand"
 import {getEncodeSpeedString} from "lib/getEncodeSpeed"
@@ -110,12 +111,12 @@ export default class extends Platform {
     await ffmpeg.run()
   }
 
-  async createFromVideoLonger(moreSeconds = 30) {
-    const outputFolder = this.fromFolder(`cut_plus_${moreSeconds}s`)
+  async createFromVideoLonger(moreMs = 30000) {
+    const outputFolder = this.fromFolder(`cut_plus_${Math.floor(moreMs / 1000)}s`)
     await makeDir(outputFolder)
     const outputFile = pathJoin(outputFolder, this.getFileName("mp4"))
-    const startTime = this.clipData.offset - moreSeconds * 1000
-    const length = this.clipData.duration + moreSeconds * 2000
+    const startTime = this.clipData.offset - moreMs
+    const length = this.clipData.duration + moreMs * 2
     const ffmpeg = new FfmpegCommand({
       outputFile,
       videoEncoder: makeHevcEncoder(this.argv),
@@ -160,8 +161,8 @@ export default class extends Platform {
       gameTitle: this.krakenClip.game,
       duration: this.krakenClip.duration * 1000,
     }
-    logger.info(`Clip: ${this.clipData.title} (${readableMs(this.clipData.duration)})`)
-    logger.info(`Clipped by ${this.clipData.clipperTitle} for ${this.clipData.streamerTitle} during ${this.clipData.gameTitle}`)
+    logger.info(propertyColor(`Clip: ${this.clipData.title} (${readableMs(this.clipData.duration)})`))
+    logger.info(propertyColor(`Clipped by ${this.clipData.clipperTitle} for ${this.clipData.streamerTitle} during ${this.clipData.gameTitle}`))
   }
 
   /**
@@ -210,7 +211,7 @@ export default class extends Platform {
     }
     await makeDir(this.folder)
     await this.createFromVideo()
-    await this.createFromVideoLonger()
+    await this.createFromVideoLonger(3000)
     if (downloadedFile) {
       this.probe = new Probe(downloadedFile, this.argv.ffprobePath)
       await this.probe.run()

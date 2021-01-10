@@ -3,6 +3,7 @@ import readableMs from "readable-ms"
 import {ApiClient} from "twitch"
 import {ClientCredentialsAuthProvider} from "twitch-auth"
 
+import {propertyColor} from "lib/colors"
 import config from "lib/config"
 import {getEncodeSpeedString} from "lib/getEncodeSpeed"
 import logger from "lib/logger"
@@ -85,7 +86,7 @@ export default class extends Platform {
   }
 
   async run() {
-    logger.info(`Video: ${this.videoData.title} (${readableMs(this.videoData.duration)})`)
+    logger.info(propertyColor(`Video: ${this.videoData.title} (${readableMs(this.videoData.duration)})`))
     const downloadResult = await this.download(this.videoData.url, {
       probe: true,
       autosub: true,
@@ -100,7 +101,7 @@ export default class extends Platform {
     this.meta.probe = downloadResult.probe.toJson()
     this.meta.archiveProbe = createArchiveResult.probe.toJson()
     this.meta.downloadedFile = downloadResult.downloadedFile
-    logger.info(`Encoded “${downloadResult.probe.toString()}” to “${createArchiveResult.probe.toString()}” with speed ${getEncodeSpeedString(downloadResult.probe.duration, createArchiveResult.runtime)}`)
+    // logger.info(`Encoded “${downloadResult.probe.toString()}” to “${createArchiveResult.probe.toString()}” with speed ${getEncodeSpeedString(downloadResult.probe.duration, createArchiveResult.runtime)}`)
   }
 
 }

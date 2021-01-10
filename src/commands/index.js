@@ -1,3 +1,4 @@
+import {propertyColor} from "lib/colors"
 import logger from "lib/logger"
 import TargetUrl from "lib/TargetUrl"
 
@@ -21,7 +22,7 @@ export default async argv => {
   if (!argv.url) {
     argv.url = testUrl
   }
-  logger.info(`Target URL: ${argv.url}`)
+  logger.info(propertyColor(`Target URL: ${argv.url}`))
   const targetUrl = new TargetUrl(argv.url)
   const platform = new platformMap[targetUrl.type](targetUrl, argv)
   await platform.start()
