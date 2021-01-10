@@ -211,7 +211,9 @@ export default class extends Platform {
     }
     await makeDir(this.folder)
     await this.createFromVideo()
-    await this.createFromVideoLonger(3000)
+    if (this.argv.moreSeconds) {
+      await this.createFromVideoLonger(this.argv.moreSeconds * 1000)
+    }
     if (downloadedFile) {
       this.probe = new Probe(downloadedFile, this.argv.ffprobePath)
       await this.probe.run()

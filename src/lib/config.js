@@ -8,6 +8,7 @@ const defaults = {
   youtubeDlPath: "E:/Binaries/youtube-dl.exe",
   autosubPath: "E:/Portables/autosub/autosub/autosub.exe",
   storageDirectory: "S:/Clips",
+  moreSeconds: null,
 }
 
 const config = essentialConfig(process.env.REPLACE_PKG_TITLE, {

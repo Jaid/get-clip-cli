@@ -40,7 +40,7 @@ export default class extends Command {
       throw new Error(`No output file given for ffmpeg command with input file ${this.commandOptions.outputFile}`)
     }
     if (this.commandOptions.startTime < 0) {
-      logger.debug(`Set ffmpeg startTime to 0, because it was ${this.commandOptions.startTime} ms`)
+      logger.debug(`Set ffmpeg startTime to 0, because it was ${readableMs(this.commandOptions.startTime)}`)
       this.commandOptions.startTime = 0
     }
     let endTime = this.commandOptions.endTime
@@ -52,7 +52,7 @@ export default class extends Command {
       }
     }
     if (endTime > this.probe.duration) {
-      logger.warn(`endTime ${endTime} ms is higher than input duration ${this.probe.duration} ms`)
+      logger.warn(`endTime ${readableMs(endTime)} is higher than input duration ${readableMs(this.probe.duration)}`)
     }
     this.commandGenerator = new FfmpegCommandGenerator(this.commandOptions)
   }

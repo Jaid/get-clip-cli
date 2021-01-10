@@ -17,6 +17,7 @@ import handleInfoCommand from "src/commands/info"
  * @prop {string} encodePreset
  * @prop {boolean} encodeFast
  * @prop {boolean} smallDownload
+ * @prop {number} moreSeconds
  */
 
 /**
@@ -64,6 +65,11 @@ const commandBuilder = {
   "small-download": {
     description: "Choose the smallest available files for download",
     type: "boolean",
+  },
+  "more-seconds": {
+    description: "Create another archive portion with more seconds on both ends",
+    type: "number",
+    default: config.moreSeconds,
   },
 }
 
