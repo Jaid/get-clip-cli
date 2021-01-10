@@ -207,7 +207,7 @@ export default class extends Platform {
         probe: true,
       })
       this.meta.archiveProbe = archiveResult.probe.toJson()
-      logger.info(`Recoded “${this.probe.toString()}” to “${archiveResult.probe.toString()}” with speed ${getEncodeSpeedString(archiveResult.probe.duration, archiveResult.runtime)}`)
+      // logger.info(`Recoded “${this.probe.toString()}” to “${archiveResult.probe.toString()}” with speed ${getEncodeSpeedString(archiveResult.probe.duration, archiveResult.runtime)}`)
     }
     await makeDir(this.folder)
     await this.createFromVideo()
