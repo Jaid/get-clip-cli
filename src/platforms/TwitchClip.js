@@ -10,6 +10,7 @@ import config from "lib/config"
 import FfmpegCommand from "lib/FfmpegCommand"
 import {getEncodeSpeedString} from "lib/getEncodeSpeed"
 import logger from "lib/logger"
+import logProperty from "lib/logProperty"
 import {makeHevcEncoder, makeOpusEncoder} from "lib/makeEncoder"
 import pathJoin from "lib/pathJoin"
 import Probe from "lib/Probe"
@@ -161,8 +162,8 @@ export default class extends Platform {
       gameTitle: this.krakenClip.game,
       duration: this.krakenClip.duration * 1000,
     }
-    logger.info(propertyColor(`Clip: ${this.clipData.title} (${readableMs(this.clipData.duration)})`))
-    logger.info(propertyColor(`Clipped by ${this.clipData.clipperTitle} for ${this.clipData.streamerTitle} during ${this.clipData.gameTitle}`))
+    logProperty("Clip", `${this.clipData.title} (${readableMs(this.clipData.duration)})`)
+    logProperty("Clipped by", `${this.clipData.clipperTitle} for ${this.clipData.streamerTitle} during ${this.clipData.gameTitle}`)
   }
 
   /**
@@ -176,7 +177,7 @@ export default class extends Platform {
    * @return {string}
    */
   getFileBase() {
-    return this.clipData.titleNormalized
+    return this.clipData.title
   }
 
   async run() {
@@ -207,9 +208,7 @@ export default class extends Platform {
         probe: true,
       })
       this.meta.archiveProbe = archiveResult.probe.toJson()
-      // logger.info(`Recoded “${this.probe.toString()}” to “${archiveResult.probe.toString()}” with speed ${getEncodeSpeedString(archiveResult.probe.duration, archiveResult.runtime)}`)
     }
-    await makeDir(this.folder)
     await this.createFromVideo()
     if (this.argv.moreSeconds) {
       await this.createFromVideoLonger(this.argv.moreSeconds * 1000)

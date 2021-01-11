@@ -1,5 +1,6 @@
 import {propertyColor} from "lib/colors"
 import logger from "lib/logger"
+import logProperty from "lib/logProperty"
 import TargetUrl from "lib/TargetUrl"
 
 import TwitchClip from "src/platforms/TwitchClip"
@@ -12,7 +13,8 @@ const platformMap = {
   youtubeVideo: YoutubeVideo,
 }
 
-const testUrl = "https://clips.twitch.tv/SassyAgreeableRutabagaDancingBanana" // Lea Diablo (short)
+const testUrl = "https://www.youtube.com/watch?v=Iw-9XH6KiOk" // YouTube 6-second video
+// const testUrl = "https://clips.twitch.tv/SassyAgreeableRutabagaDancingBanana" // Lea Diablo (short)
 // const testUrl = "https://www.twitch.tv/videos/712407540?filter=archives&sort=time" test video
 // const testUrl = "https://www.twitch.tv/jaidchen/clip/FrailPreciousSalmonSaltBae" // Jaidchen Testi (mine)
 
@@ -24,7 +26,7 @@ export default async argv => {
   if (!argv.url) {
     argv.url = testUrl
   }
-  logger.info(propertyColor(`Target URL: ${argv.url}`))
+  logProperty("Target URL", `${argv.url}`)
   const targetUrl = new TargetUrl(argv.url)
   const platform = new platformMap[targetUrl.type](targetUrl, argv)
   await platform.start()

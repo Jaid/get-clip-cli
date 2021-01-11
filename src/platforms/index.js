@@ -1,10 +1,13 @@
 import fsp from "@absolunet/fsp"
+import fileExtension from "file-extension"
+import filenamifyShrink from "filenamify-shrink"
 import findByExtension from "find-by-extension"
 import fs from "fs/promises"
 import globby from "globby"
 import makeDir from "make-dir"
 import normalizePath from "normalize-path"
 import prettyBytes from "pretty-bytes"
+import readFileJson from "read-file-json"
 import statSize from "stat-size"
 import sureArray from "sure-array"
 import tempy from "tempy"
@@ -13,13 +16,13 @@ import AutosubCommand from "lib/AutosubCommand"
 import {purpleColor} from "lib/colors"
 import FfmpegCommand from "lib/FfmpegCommand"
 import findSrtFile from "lib/findSrtFile"
+import generateId from "lib/generateId"
 import logger from "lib/logger"
+import logProperty, {logPropertyDebug} from "lib/logProperty"
 import {makeHevcEncoder, makeOpusEncoder} from "lib/makeEncoder"
 import makeYoutubeDlCommand from "lib/makeYoutubeDlCommand"
 import pathJoin from "lib/pathJoin"
 import Probe from "lib/Probe"
-import replaceBasename from "lib/replaceBasename"
-import YouTubeDlCommand from "lib/YouTubeDlCommand"
 
 export default class Platform {
 
@@ -37,6 +40,11 @@ export default class Platform {
    * @type {object}
    */
   meta = {}
+
+  /**
+   * @type {object}
+   */
+  youtubeDlMeta = null
 
   /**
    * @type {() => Promise<void>}
@@ -58,6 +66,24 @@ export default class Platform {
     this.targetUrl = targetUrl
     this.argv = argv
     this.options = options
+  }
+
+  /**
+   * @param {string} folder
+   * @return {Promise<void>}
+   */
+  async setFolder(folder) {
+    this.folder = normalizePath(folder)
+    await makeDir(this.folder)
+  }
+
+
+  /**
+   * @param {string} fileBase
+   * @return {void}
+   */
+  setFileBase(fileBase) {
+    this.fileBase = fileBase
   }
 
   /**
@@ -112,9 +138,6 @@ export default class Platform {
 
   async start() {
     await this.beforeRun()
-    this.folder = this.getFolder()
-    this.fileBase = this.getFileBase()
-    await makeDir(this.folder)
     await this.run()
     await this.afterRun()
     await this.dumpMeta()
@@ -186,9 +209,10 @@ export default class Platform {
       autosub: false,
       ...downloadOptions,
     }
-    const downloadFolder = pathJoin(this.folder, options.folderName)
-    await makeDir(downloadFolder)
-    logger.debug(`Downloading ${url}`)
+    const cacheId = await generateId(8)
+    const tempDownloadFolder = pathJoin(this.argv.storageDirectory, ".cache", cacheId)
+    logPropertyDebug("Temp download folder", tempDownloadFolder)
+    logProperty("Download URL", url)
     /**
      * @type {import("src/lib/Command").Options & import("src/lib/YouTubeDlCommand").CommandOptions}
      */
@@ -196,26 +220,53 @@ export default class Platform {
       url,
       executablePath: this.argv.youtubeDlPath,
       argv: this.argv,
-      outputFile: pathJoin(downloadFolder, "download.%(ext)s"),
+      outputFile: pathJoin(tempDownloadFolder, "download.%(ext)s"),
       writeInfoJson: true,
       callHome: false,
     }
     const youtubeDl = makeYoutubeDlCommand(this.argv, youtubeDlOptions)
     const youtubeDlResult = await youtubeDl.run()
-    let downloadedFile = await this.getDownloadedVideoFile()
-    if (!downloadedFile) {
-      throw new Error(`Something went wrong. youtube-dl did run, but there is no downloaded file in “${this.folder}”.`)
+    const tempYoutubeDlMetaFiles = await globby(["*.json"], {
+      cwd: tempDownloadFolder,
+      absolute: true,
+    })
+    if (!tempYoutubeDlMetaFiles.length) {
+      throw new Error(`No youtube-dl meta file found in ${tempDownloadFolder}`)
     }
+    if (tempYoutubeDlMetaFiles.length !== 1) {
+      logger.warn(`Found multiple youtube-dl meta files in ${tempDownloadFolder} for some reason`)
+    }
+    const tempYoutubeDlMetaFile = tempYoutubeDlMetaFiles[0]
+    this.youtubeDlMeta = await readFileJson(tempYoutubeDlMetaFile)
+    await fs.unlink(tempYoutubeDlMetaFile)
+    const tempDownloadedFiles = await globby(["download.*"], {
+      cwd: tempDownloadFolder,
+      absolute: true,
+    })
+    if (!tempDownloadedFiles.length) {
+      throw new Error(`No media download found in ${tempDownloadFolder}`)
+    }
+    if (tempDownloadedFiles.length !== 1) {
+      logger.warn(`Found multiple media downloads in ${tempDownloadFolder} for some reason`)
+    }
+    const tempDownloadedFile = tempDownloadedFiles[0]
+    if (!this.fileBase) {
+      const rawFileBase = this.getFileBase()
+      const fixedFileBase = filenamifyShrink(rawFileBase).trim()
+      this.setFileBase(fixedFileBase)
+    }
+    if (!this.folder) {
+      await this.setFolder(this.getFolder())
+    }
+    const downloadFolder = pathJoin(this.folder, options.folderName)
+    await makeDir(downloadFolder)
+    const downloadedFileExtension = fileExtension(tempDownloadedFile)
+    const downloadedFile = pathJoin(downloadFolder, `${this.fileBase}.${downloadedFileExtension}`)
+    const youtubeDlMetaFile = pathJoin(downloadFolder, "youtubeDlMeta.yml")
+    await fs.rename(tempDownloadedFile, downloadedFile)
+    await fsp.outputYaml(youtubeDlMetaFile, this.youtubeDlMeta)
     if (options.autosub) {
       await this.createSubtitles(downloadedFile)
-    }
-    const renamedFile = replaceBasename(downloadedFile, this.fileBase)
-    if (renamedFile === downloadedFile) {
-      logger.debug(`Nothing better to rename to, so we will keep the download file name “${downloadedFile}”`)
-    } else {
-      logger.debug(`Renaming ${downloadedFile} to ${renamedFile}`)
-      await fs.rename(downloadedFile, renamedFile)
-      downloadedFile = renamedFile
     }
     const downloadedFileSize = await statSize(downloadedFile)
     const downloadedFileSizeText = prettyBytes(downloadedFileSize)
