@@ -4,10 +4,12 @@ import TargetUrl from "lib/TargetUrl"
 
 import TwitchClip from "src/platforms/TwitchClip"
 import TwitchVideo from "src/platforms/TwitchVideo"
+import YoutubeVideo from "src/platforms/YoutubeVideo"
 
 const platformMap = {
   twitchClip: TwitchClip,
   twitchVideo: TwitchVideo,
+  youtubeVideo: YoutubeVideo,
 }
 
 const testUrl = "https://clips.twitch.tv/SassyAgreeableRutabagaDancingBanana" // Lea Diablo (short)
