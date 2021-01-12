@@ -24,10 +24,12 @@ const testUrl = "https://www.youtube.com/watch?v=Iw-9XH6KiOk" // YouTube 6-secon
 export default async argv => {
   await require("./wipe").default(argv) // Faster testing
   if (!argv.url) {
-    argv.url = testUrl
+    // argv.url = testUrl
   }
-  logProperty("Target URL", `${argv.url}`)
-  const targetUrl = new TargetUrl(argv.url)
-  const platform = new platformMap[targetUrl.type](targetUrl, argv)
-  await platform.start()
+  for (const url of argv.url) {
+    logProperty("Target URL", `${url}`)
+    const targetUrl = new TargetUrl(url)
+    const platform = new platformMap[targetUrl.type](targetUrl, argv)
+    await platform.start()
+  }
 }
