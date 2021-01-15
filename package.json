@@ -29,8 +29,8 @@
     "string.prototype.replaceall": "^1.0.4",
     "sure-array": "^1.0.0",
     "tempy": "^1.0.0",
-    "twitch": "^4.3.8",
-    "twitch-auth": "^4.3.8",
+    "twitch": "^4.4.0",
+    "twitch-auth": "^4.4.0",
     "yargs": "^16.2.0"
   },
   "devDependencies": {
@@ -38,14 +38,14 @@
     "babel-jest": "^26.6.3",
     "babel-preset-jaid": "^9.0.0",
     "browserslist-config-jaid-node": "^3.0.0",
-    "caniuse-lite": "^1.0.30001173",
+    "caniuse-lite": "^1.0.30001177",
     "coffee": "^5.4.0",
     "eslint": "^7.17.0",
     "eslint-config-jaid": "^1.49.0",
     "jest": "^26.6.3",
     "rimraf": "^3.0.2",
     "tsconfig-jaid": "^2.1.1",
-    "webpack": "^4.44.2",
+    "webpack": "^5.14.0",
     "webpack-config-jaid": "^11.13.0"
   },
   "scripts": {
