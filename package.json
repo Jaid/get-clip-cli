@@ -31,7 +31,8 @@
     "tempy": "^1.0.0",
     "twitch": "^4.4.0",
     "twitch-auth": "^4.4.0",
-    "yargs": "^16.2.0"
+    "yargs": "^16.2.0",
+    "zahl": "^2.0.6"
   },
   "devDependencies": {
     "acorn": "^8.0.4",
