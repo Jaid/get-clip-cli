@@ -1,3 +1,4 @@
+import FfmpegH264 from "src/packages/ffmpeg-args/src/FfmpegH264"
 import FfmpegHevc from "src/packages/ffmpeg-args/src/FfmpegHevc"
 import FfmpegOpus from "src/packages/ffmpeg-args/src/FfmpegOpus"
 
@@ -12,6 +13,14 @@ export const makeHevcEncoder = (argv, encoderOptions) => {
     options.preset = "ultrafast"
   }
   return new FfmpegHevc(options)
+}
+
+export const makeH264Encoder = (argv, encoderOptions) => {
+  const options = {...encoderOptions}
+  if (argv.encodeFast) {
+    options.preset = "ultrafast"
+  }
+  return new FfmpegH264(options)
 }
 
 /**
