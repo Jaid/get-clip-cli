@@ -9,6 +9,7 @@ const defaults = {
   autosubPath: "E:/Portables/autosub/autosub/autosub.exe",
   storageDirectory: "S:/Clips",
   moreSeconds: null,
+  fallbackTargetUrls: ["https://www.youtube.com/watch?v=Iw-9XH6KiOk"],
 }
 
 const config = essentialConfig(process.env.REPLACE_PKG_TITLE, {

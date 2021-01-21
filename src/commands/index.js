@@ -1,4 +1,8 @@
+import isEmpty from "is-empty"
+import sureArray from "sure-array"
+
 import {propertyColor} from "lib/colors"
+import config from "lib/config"
 import logger from "lib/logger"
 import logProperty from "lib/logProperty"
 import TargetUrl from "lib/TargetUrl"
@@ -13,7 +17,7 @@ const platformMap = {
   youtubeVideo: YoutubeVideo,
 }
 
-const testUrl = "https://www.youtube.com/watch?v=Iw-9XH6KiOk" // YouTube 6-second video
+// const testUrl = "https://www.youtube.com/watch?v=Iw-9XH6KiOk" // YouTube 6-second video
 // const testUrl = "https://clips.twitch.tv/SassyAgreeableRutabagaDancingBanana" // Lea Diablo (short)
 // const testUrl = "https://www.twitch.tv/videos/712407540?filter=archives&sort=time" test video
 // const testUrl = "https://www.twitch.tv/jaidchen/clip/FrailPreciousSalmonSaltBae" // Jaidchen Testi (mine)
@@ -23,13 +27,31 @@ const testUrl = "https://www.youtube.com/watch?v=Iw-9XH6KiOk" // YouTube 6-secon
  */
 export default async argv => {
   await require("./wipe").default(argv) // Faster testing
-  if (!argv.url) {
-    // argv.url = testUrl
-  }
-  for (const url of argv.url) {
-    logProperty("Target URL", `${url}`)
+  const processUrl = async url => {
     const targetUrl = new TargetUrl(url)
     const platform = new platformMap[targetUrl.type](targetUrl, argv)
     await platform.start()
+  }
+  if (isEmpty(argv.url)) {
+    logger.info("No target URLs given")
+    const fallbackTargetUrls = sureArray(config.fallbackTargetUrls)
+    if (isEmpty(fallbackTargetUrls)) {
+      logger.warn("No fallback target URLs set in config, quitting")
+      return
+    }
+    argv.url = fallbackTargetUrls
+  }
+  const isSingleUrl = argv.url.length === 1
+  if (isSingleUrl) {
+    const url = argv.url[0]
+    logProperty("Target URL", url)
+    await processUrl(url)
+  } else {
+    let i = 1
+    for (const url of argv.url) {
+      logProperty(`Target URL #${i}`, url)
+      i++
+      await processUrl(url)
+    }
   }
 }
