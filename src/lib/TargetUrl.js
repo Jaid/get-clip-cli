@@ -55,4 +55,17 @@ export default class {
     }
   }
 
+  toString() {
+    if (this.type === "twitchClip") {
+      return `Twitch clip ${this.clipSlug}`
+    }
+    if (this.type === "twitchVideo") {
+      return `Twitch video ${this.videoId}`
+    }
+    if (this.type === "youtubeVideo") {
+      return `YouTube video ${this.videoId}`
+    }
+    return "[Unknown Target URL]"
+  }
+
 }

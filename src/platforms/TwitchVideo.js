@@ -89,7 +89,6 @@ export default class extends Platform {
   async run() {
     logProperty("Video", `${this.videoData.title} (${readableMs(this.videoData.duration)})`)
     const downloadResult = await this.download(this.videoData.url, {
-      probe: true,
       autosub: true,
     })
     const createArchiveResult = await this.recode({

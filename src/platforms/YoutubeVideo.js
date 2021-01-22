@@ -23,7 +23,6 @@ export default class extends Platform {
   async run() {
     const url = `https://youtube.com/watch?v=${this.targetUrl.videoId}`
     const downloadResult = await this.download(url, {
-      probe: true,
       autosub: true,
     })
     const createArchiveResult = await this.recode({

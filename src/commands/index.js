@@ -39,6 +39,7 @@ export default async argv => {
       logger.warn("No fallback target URLs set in config, quitting")
       return
     }
+    logger.info("Using config.fallbackTargetUrls")
     argv.url = fallbackTargetUrls
   }
   const isSingleUrl = argv.url.length === 1

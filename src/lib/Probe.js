@@ -1,7 +1,12 @@
 import ffprobe from "ffprobe"
+import moment from "moment"
+import prettyBytes from "pretty-bytes"
 import readableMs from "readable-ms"
+import statSize from "stat-size"
+import Stoppuhr from "stoppuhr"
 
 import logger from "./logger"
+import {logPropertyDebug} from "./logProperty"
 
 /**
  * @typedef {object} ProbeStream
@@ -13,6 +18,7 @@ import logger from "./logger"
  * @prop {string} codec_name
  * @prop {string} codec_long_name
  * @prop {number} bit_rate
+ * @prop {Object<string,string>} [tags]
  */
 
 /**
@@ -33,7 +39,7 @@ import logger from "./logger"
 function streamToString(stream) {
   let result = stream.codec_name
   if (stream.profile) {
-    result += `-${stream.profile}`
+    result += `-${stream.profile.replace(/ +/g, "-")}`
   }
   if (stream.bit_rate) {
     const bitrate = Math.ceil(stream.bit_rate / 1000)
@@ -80,16 +86,26 @@ export default class {
 
   async run() {
     logger.debug(`Probe ${this.file}`)
-    const startTime = Date.now()
-    this.raw = await ffprobe(this.file, {
-      path: this.ffprobePath,
-    })
-    const runtime = Date.now() - startTime
+    const stoppuhr = new Stoppuhr
+    const [raw, fileSize] = await Promise.all([
+      ffprobe(this.file, {
+        path: this.ffprobePath,
+      }),
+      statSize(this.file),
+    ])
+    const runTime = stoppuhr.total()
+    this.raw = raw
+    this.fileSize = fileSize
+    this.fileSizeText = prettyBytes(fileSize)
     this.streamAdditions = this.raw.streams.map(stream => {
       const newStream = {
         index: stream.index,
       }
-      if (stream.duration) {
+      if (stream.tags?.DURATION) {
+        // Format: 00:00:06.246000000
+        const momentDuration = moment.duration(stream.tags.DURATION)
+        newStream.durationMs = momentDuration.asMilliseconds()
+      } else if (stream.duration) {
         newStream.durationMs = Math.ceil(Number(stream.duration) * 1000)
       }
       return newStream
@@ -98,7 +114,13 @@ export default class {
     this.audio = this.raw.streams.find(stream => stream.codec_type === "audio")
     const durations = this.streamAdditions.map(stream => stream.durationMs)
     this.duration = Math.max(...durations)
-    logger.debug(`Probed ${this.file} in ${readableMs(runtime)}: ${this.toString()}`)
+    if (!Number.isFinite(this.duration)) {
+      logger.warn(`Duration for “${this.file}” is ${this.duration} (type ${typeof this.duration}) for some reason`)
+      logger.warn(`Stream durations: ${durations.map(value => `${value} (type ${typeof value})`).join(", ")}`)
+      logger.debug(`Raw ffprobe: ${JSON.stringify(this.raw)}`)
+      debugger
+    }
+    logger.debug(`Probed ${this.file} in ${readableMs(runTime)}: ${this.toString()}`)
   }
 
   toJson() {
@@ -108,6 +130,8 @@ export default class {
       video: this.video,
       audio: this.audio,
       duration: this.duration,
+      fileSize: this.fileSize,
+      fileSizeText: this.fileSizeText,
     }
   }
 

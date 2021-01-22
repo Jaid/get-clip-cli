@@ -1,7 +1,6 @@
 import fileExtension from "file-extension"
 import {omit} from "lodash"
 import readableMs from "readable-ms"
-import statSizeText from "stat-size-text"
 import Stoppuhr from "stoppuhr"
 
 import Command from "src/lib/Command"
@@ -61,18 +60,14 @@ export default class extends Command {
 
   async afterRun() {
     const outputProbe = new Probe(this.commandOptions.outputFile, this.options.argv.ffprobePath)
-    const [inputFileSizeText, outputFileSizeText] = await Promise.all([
-      statSizeText(this.commandOptions.inputFile),
-      statSizeText(this.commandOptions.outputFile),
-      outputProbe.run(),
-    ])
+    await outputProbe.run()
     const runTime = this.stoppuhr.total()
     logger.info(ffmpegHeaderColor(`FFmpeg success in ${readableMs(runTime)}`))
     logger.info(ffmpegLineColor(`Speed:  ${getEncodeSpeedString(outputProbe.duration, runTime)}`))
     logger.info(ffmpegLineColor(`Input:  ${pathRelative(this.options.argv.storageDirectory, this.commandOptions.inputFile)}`))
-    logger.info(ffmpegLineColor(`        ${readableMs(this.probe.duration)}, ${inputFileSizeText} ${fileExtension(this.commandOptions.inputFile)}, ${this.probe.toString()}`))
+    logger.info(ffmpegLineColor(`        ${readableMs(this.probe.duration)}, ${this.probe.fileSizeText} ${fileExtension(this.commandOptions.inputFile)}, ${this.probe.toString()}`))
     logger.info(ffmpegLineColor(`Output: ${pathRelative(this.options.argv.storageDirectory, this.commandOptions.outputFile)}`))
-    logger.info(ffmpegLineColor(`        ${readableMs(outputProbe.duration)}, ${outputFileSizeText} ${fileExtension(this.commandOptions.outputFile)}, ${outputProbe.toString()}`))
+    logger.info(ffmpegLineColor(`        ${readableMs(outputProbe.duration)}, ${outputProbe.fileSizeText} ${fileExtension(this.commandOptions.outputFile)}, ${outputProbe.toString()}`))
   }
 
   /**

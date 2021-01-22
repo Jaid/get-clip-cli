@@ -196,9 +196,7 @@ export default class extends Platform {
       await this.prepareVideo()
     } else {
       logger.warn("Video is not available")
-      const downloadResult = await this.download(this.clipData.url, {
-        probe: true,
-      })
+      const downloadResult = await this.download(this.clipData.url)
       downloadedFile = downloadResult.downloadedFile
       this.youtubeDlDataFile = this.fromFolder("download", "download.info.json")
       const youtubeDlData = await readFileJson(this.youtubeDlDataFile)

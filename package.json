@@ -17,6 +17,7 @@
     "jaid-logger": "^2.2.0",
     "make-dir": "^3.1.0",
     "match-array": "^1.0.0",
+    "moment": "^2.29.0",
     "nanoid": "^3.1.20",
     "normalize-path": "^3.0.0",
     "pify": "^5.0.0",

@@ -6,22 +6,24 @@ import fs from "fs/promises"
 import globby from "globby"
 import makeDir from "make-dir"
 import normalizePath from "normalize-path"
-import prettyBytes from "pretty-bytes"
 import readFileJson from "read-file-json"
-import statSize from "stat-size"
+import readableMs from "readable-ms"
+import Stoppuhr from "stoppuhr"
 import sureArray from "sure-array"
 import tempy from "tempy"
 
 import AutosubCommand from "lib/AutosubCommand"
-import {purpleColor} from "lib/colors"
+import {ffmpegHeaderColor, ffmpegLineColor, purpleColor} from "lib/colors"
 import FfmpegCommand from "lib/FfmpegCommand"
 import findSrtFile from "lib/findSrtFile"
 import generateId from "lib/generateId"
+import {getEncodeSpeedString} from "lib/getEncodeSpeed"
 import logger from "lib/logger"
 import logProperty, {logPropertyDebug} from "lib/logProperty"
 import {makeHevcEncoder, makeOpusEncoder} from "lib/makeEncoder"
 import makeYoutubeDlCommand from "lib/makeYoutubeDlCommand"
 import pathJoin from "lib/pathJoin"
+import pathRelative from "lib/pathRelative"
 import Probe from "lib/Probe"
 
 export default class Platform {
@@ -181,16 +183,13 @@ export default class Platform {
    * @typedef {object} DownloadResult
    * @prop {string} downloadFolder
    * @prop {string} downloadedFile
-   * @prop {number} downloadedFileSize
-   * @prop {string} downloadedFileSizeText
    * @prop {import("execa").ExecaReturnValue} youtubeDlResult
-   * @prop {import("lib/Probe").default} [probe]
+   * @prop {import("lib/Probe").default} probe
    */
 
   /**
    * @typedef {object} DownloadOptions
    * @prop {string} [folderName="download"]
-   * @prop {boolean} [probe]
    * @prop {boolean} [autosub]
    */
 
@@ -205,7 +204,6 @@ export default class Platform {
      */
     const options = {
       folderName: "download",
-      probe: false,
       autosub: false,
       ...downloadOptions,
     }
@@ -225,7 +223,9 @@ export default class Platform {
       callHome: false,
     }
     const youtubeDl = makeYoutubeDlCommand(this.argv, youtubeDlOptions)
+    const stoppuhr = new Stoppuhr
     const youtubeDlResult = await youtubeDl.run()
+    const runTime = stoppuhr.total()
     const tempYoutubeDlMetaFiles = await globby(["*.json"], {
       cwd: tempDownloadFolder,
       absolute: true,
@@ -254,9 +254,11 @@ export default class Platform {
       const rawFileBase = this.getFileBase()
       const fixedFileBase = filenamifyShrink(rawFileBase).trim()
       this.setFileBase(fixedFileBase)
+      logPropertyDebug("Media file base", this.fileBase)
     }
     if (!this.folder) {
       await this.setFolder(this.getFolder())
+      logPropertyDebug("Folder", this.folder)
     }
     const downloadFolder = pathJoin(this.folder, options.folderName)
     await makeDir(downloadFolder)
@@ -265,25 +267,21 @@ export default class Platform {
     const youtubeDlMetaFile = pathJoin(downloadFolder, "youtubeDlMeta.yml")
     await fs.rename(tempDownloadedFile, downloadedFile)
     await fsp.outputYaml(youtubeDlMetaFile, this.youtubeDlMeta)
+    const probe = new Probe(downloadedFile, this.argv.ffprobePath)
+    await probe.run()
     if (options.autosub) {
       await this.createSubtitles(downloadedFile)
     }
-    const downloadedFileSize = await statSize(downloadedFile)
-    const downloadedFileSizeText = prettyBytes(downloadedFileSize)
-    logger.info(`Downloaded ${downloadedFile} (${downloadedFileSizeText})`)
-    const result = {
+    logger.info(ffmpegHeaderColor(`Downloaded ${this.targetUrl.toString()} in ${readableMs(runTime)}`))
+    logger.info(ffmpegLineColor(`Speed:  ${getEncodeSpeedString(probe.duration, runTime)}`))
+    logger.info(ffmpegLineColor(`Output: ${pathRelative(this.argv.storageDirectory, downloadedFile)}`))
+    logger.info(ffmpegLineColor(`        ${readableMs(probe.duration)}, ${probe.fileSizeText} ${fileExtension(downloadedFile)}, ${probe.toString()}`))
+    return {
       downloadFolder,
       downloadedFile,
-      downloadedFileSize,
-      downloadedFileSizeText,
       youtubeDlResult,
+      probe,
     }
-    if (options.probe) {
-      const probe = new Probe(downloadedFile, this.argv.ffprobePath)
-      await probe.run()
-      result.probe = probe
-    }
-    return result
   }
 
   /**
