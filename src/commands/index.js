@@ -27,8 +27,7 @@ const platformMap = {
  */
 export default async argv => {
   await require("./wipe").default(argv) // Faster testing
-  const processUrl = async url => {
-    const targetUrl = new TargetUrl(url)
+  const processUrl = async targetUrl => {
     const platform = new platformMap[targetUrl.type](targetUrl, argv)
     await platform.start()
   }
@@ -43,16 +42,17 @@ export default async argv => {
     argv.url = fallbackTargetUrls
   }
   const isSingleUrl = argv.url.length === 1
+  const targetUrls = argv.url.map(url => new TargetUrl(url))
   if (isSingleUrl) {
-    const url = argv.url[0]
-    logProperty("Target URL", url)
-    await processUrl(url)
+    const targetUrl = targetUrls[0]
+    logProperty("Target URL", targetUrl.name)
+    await processUrl(targetUrl)
   } else {
     let i = 1
-    for (const url of argv.url) {
-      logProperty(`Target URL #${i}`, url)
+    for (const targetUrl of targetUrls) {
+      logProperty(`Target URL #${i}`, targetUrl.name)
       i++
-      await processUrl(url)
+      await processUrl(targetUrl)
     }
   }
 }

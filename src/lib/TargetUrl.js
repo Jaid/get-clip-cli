@@ -1,11 +1,69 @@
+import {v5} from "uuid"
+
 import Url from "lib/Url"
 
 import logger from "./logger"
+import uuidNamespaces from "./uuidNamespaces"
 
 const twitchHost = ["twitch.tv", "www.twitch.tv"]
 const youtubeHost = ["www.youtube.com", "youtube.com"]
 
-export default class {
+/**
+ * @typedef {"twitchClip"|"twitchVideo"|"youtubeVideo"} PlatformType
+ */
+
+/**
+ * @typedef {Object} ParseUrlResult
+ * @prop {PlatformType} type
+ * @prop {string} id
+ */
+
+/**
+ * @param {import("lib/Url").default} url
+ * @return {ParseUrlResult}
+ */
+function parseUrl(url) {
+  const isTwitch = twitchHost.includes(url.hostname)
+  const isYouTube = youtubeHost.includes(url.hostname)
+  if (isTwitch && url.pathSegments.length > 2 && url.pathSegments[1] === "clip") {
+    return {
+      type: "twitchClip",
+      id: url.pathSegments[2],
+    }
+  }
+  if (isTwitch && url.pathSegments.length > 1 && url.pathSegments[0] === "clip") {
+    return {
+      type: "twitchClip",
+      id: url.pathSegments[1],
+    }
+  }
+  if (url.hostname === "clips.twitch.tv" && url.pathSegments.length > 0) {
+    return {
+      type: "twitchClip",
+      id: url.pathSegments[0],
+    }
+  }
+  if (isTwitch && url.pathSegments.length > 1 && url.pathSegments[0] === "videos") {
+    return {
+      type: "twitchVideo",
+      id: url.pathSegments[1],
+    }
+  }
+  if (isYouTube && url.searchParams.has("v")) {
+    return {
+      type: "youtubeVideo",
+      id: url.searchParams.get("v"),
+    }
+  }
+  if (url.hostname === "youtu.be") {
+    return {
+      type: "youtubeVideo",
+      id: url.pathname,
+    }
+  }
+}
+
+export default class TargetUrl {
 
   /**
    * @type {Url}
@@ -13,59 +71,32 @@ export default class {
   url = null
 
   /**
-   * @type {Object}
-   */
-  props = {}
-
-  /**
-   * @type {"twitchClip"|"twitchVideo"|"youtubeVideo"|null}
+   * @type {PlatformType}
    */
   type = null
+
+  /**
+   * @type {string}
+   */
+  id = null
 
   /**
    * @param {string} url
    */
   constructor(url) {
     this.url = new Url(url)
-    const isTwitch = twitchHost.includes(this.url.hostname)
-    const isYouTube = youtubeHost.includes(this.url.hostname)
-    if (isTwitch && this.url.pathSegments.length > 2 && this.url.pathSegments[1] === "clip") {
-      this.type = "twitchClip"
-      this.clipSlug = this.url.pathSegments[2]
+    const urlInfo = parseUrl(this.url)
+    if (!urlInfo) {
+      throw new Error(`Could not extract useful information from url ${url}`)
     }
-    if (isTwitch && this.url.pathSegments.length > 1 && this.url.pathSegments[0] === "clip") {
-      this.type = "twitchClip"
-      this.clipSlug = this.url.pathSegments[1]
-    }
-    if (this.url.hostname === "clips.twitch.tv" && this.url.pathSegments.length > 0) {
-      this.type = "twitchClip"
-      this.clipSlug = this.url.pathSegments[0]
-    }
-    if (isTwitch && this.url.pathSegments.length > 1 && this.url.pathSegments[0] === "videos") {
-      this.type = "twitchVideo"
-      this.videoId = this.url.pathSegments[1]
-    }
-    if (isYouTube && this.url.searchParams.has("v")) {
-      this.type = "youtubeVideo"
-      this.videoId = this.url.searchParams.get("v")
-    }
-    if (this.url.hostname === "youtu.be") {
-      this.type = "youtubeVideo"
-      this.videoId = this.url.pathname
-    }
+    this.id = urlInfo.id
+    this.type = urlInfo.type
+    this.name = `${this.type} ${this.id}`
+    this.hashedName = v5(this.name, uuidNamespaces.platformTypes)
   }
 
   toString() {
-    if (this.type === "twitchClip") {
-      return `Twitch clip ${this.clipSlug}`
-    }
-    if (this.type === "twitchVideo") {
-      return `Twitch video ${this.videoId}`
-    }
-    if (this.type === "youtubeVideo") {
-      return `YouTube video ${this.videoId}`
-    }
-    return "[Unknown Target URL]"
+    return this.name
   }
 
 }

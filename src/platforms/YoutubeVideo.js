@@ -21,7 +21,7 @@ export default class extends Platform {
   }
 
   async run() {
-    const url = `https://youtube.com/watch?v=${this.targetUrl.videoId}`
+    const url = `https://youtube.com/watch?v=${this.targetUrl.id}`
     const downloadResult = await this.download(url, {
       autosub: true,
     })

@@ -65,7 +65,7 @@ export default class extends Platform {
     } else {
       const authProvider = new ClientCredentialsAuthProvider(config.twitchClientId, config.twitchClientSecret)
       const apiClient = new ApiClient({authProvider})
-      this.helixVideo = await apiClient.helix.videos.getVideoById(this.targetUrl.videoId)
+      this.helixVideo = await apiClient.helix.videos.getVideoById(this.targetUrl.id)
     }
     this.videoData = {
       duration: this.helixVideo.durationInSeconds * 1000,

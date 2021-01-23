@@ -9,28 +9,29 @@ export default function getEncodeSpeed(videoDuration, encodeDuration) {
 
 /**
  * @param {number} speed
+ * @param {number} [expectedRatio=1]
  * @return {string}
  */
-function getGrade(speed) {
-  if (speed < 10) {
+function getGrade(speed, expectedRatio = 1) {
+  if (speed < 10 * expectedRatio) {
     return "terrible"
   }
-  if (speed < 50) {
+  if (speed < 50 * expectedRatio) {
     return "slow"
   }
-  if (speed < 80) {
+  if (speed < 80 * expectedRatio) {
     return "acceptable"
   }
-  if (speed < 120) {
+  if (speed < 120 * expectedRatio) {
     return "realtime"
   }
-  if (speed < 175) {
+  if (speed < 175 * expectedRatio) {
     return "good"
   }
-  if (speed < 300) {
+  if (speed < 300 * expectedRatio) {
     return "great"
   }
-  if (speed < 1000) {
+  if (speed < 1000 * expectedRatio) {
     return "excellent"
   }
   return "extreme"
@@ -39,6 +40,7 @@ function getGrade(speed) {
 /**
  * @param {number} videoDuration
  * @param {number} encodeDuration
+ * @param {number} [expectedRatio=1]
  * @return {string}
  * 0-10: terrible
  * 10-50: slow
@@ -49,8 +51,8 @@ function getGrade(speed) {
  * 300-1000: excellent
  * 1000+: extreme
  */
-export const getEncodeSpeedString = (videoDuration, encodeDuration) => {
+export const getEncodeSpeedString = (videoDuration, encodeDuration, expectedRatio = 1) => {
   const speed = getEncodeSpeed(videoDuration, encodeDuration)
-  const grade = getGrade(speed)
+  const grade = getGrade(speed, expectedRatio)
   return `${speed}% (${grade})`
 }

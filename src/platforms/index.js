@@ -16,7 +16,6 @@ import AutosubCommand from "lib/AutosubCommand"
 import {ffmpegHeaderColor, ffmpegLineColor, purpleColor} from "lib/colors"
 import FfmpegCommand from "lib/FfmpegCommand"
 import findSrtFile from "lib/findSrtFile"
-import generateId from "lib/generateId"
 import {getEncodeSpeedString} from "lib/getEncodeSpeed"
 import logger from "lib/logger"
 import logProperty, {logPropertyDebug} from "lib/logProperty"
@@ -207,8 +206,7 @@ export default class Platform {
       autosub: false,
       ...downloadOptions,
     }
-    const cacheId = await generateId(8)
-    const tempDownloadFolder = pathJoin(this.argv.storageDirectory, ".cache", cacheId)
+    const tempDownloadFolder = pathJoin(this.argv.storageDirectory, ".cache", this.targetUrl.hashedName)
     logPropertyDebug("Temp download folder", tempDownloadFolder)
     logProperty("Download URL", url)
     /**
@@ -272,8 +270,8 @@ export default class Platform {
     if (options.autosub) {
       await this.createSubtitles(downloadedFile)
     }
-    logger.info(ffmpegHeaderColor(`Downloaded ${this.targetUrl.toString()} in ${readableMs(runTime)}`))
-    logger.info(ffmpegLineColor(`Speed:  ${getEncodeSpeedString(probe.duration, runTime)}`))
+    logger.info(ffmpegHeaderColor(`Downloaded ${this.targetUrl.name} in ${readableMs(runTime)}`))
+    logger.info(ffmpegLineColor(`Speed:  ${getEncodeSpeedString(probe.duration, runTime, 10)}`))
     logger.info(ffmpegLineColor(`Output: ${pathRelative(this.argv.storageDirectory, downloadedFile)}`))
     logger.info(ffmpegLineColor(`        ${readableMs(probe.duration)}, ${probe.fileSizeText} ${fileExtension(downloadedFile)}, ${probe.toString()}`))
     return {

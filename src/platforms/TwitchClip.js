@@ -138,9 +138,9 @@ export default class extends Platform {
     const authProvider = new ClientCredentialsAuthProvider(config.twitchClientId, config.twitchClientSecret)
     const apiClient = new ApiClient({authProvider})
     const [helixClip, krakenClip] = await Promise.all([
-      apiClient.helix.clips.getClipById(this.targetUrl.clipSlug),
+      apiClient.helix.clips.getClipById(this.targetUrl.id),
       apiClient.callApi({
-        url: `clips/${this.targetUrl.clipSlug}`,
+        url: `clips/${this.targetUrl.id}`,
       }),
     ])
     this.helixClip = helixClip
