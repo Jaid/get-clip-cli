@@ -1,5 +1,8 @@
 import filenamifyShrink from "filenamify-shrink"
 
+import FfmpegPcm from "src/packages/ffmpeg-args/src/FfmpegPcm"
+import FfmpegProres from "src/packages/ffmpeg-args/src/FfmpegProres"
+
 import Platform from "."
 
 export default class extends Platform {
@@ -27,7 +30,12 @@ export default class extends Platform {
     })
     const createArchiveResult = await this.recode({
       inputFile: downloadResult.downloadedFile,
+      fileExtension: "mov",
       probe: true,
+      ffmpegOptions: {
+        audioEncoder: new FfmpegPcm,
+        videoEncoder: new FfmpegProres,
+      },
     })
   }
 

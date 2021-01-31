@@ -330,7 +330,7 @@ export default class Platform {
    * @typedef {object} RecodeOptions
    * @prop {string} inputFile
    * @prop {string} [outputName="archive"]
-   * @prop {import("src/packages/ffmpeg-args/src/index").CommandOptions & import("lib/Command").Options} [ffmpegOptions]
+   * @prop {Partial<import("src/packages/ffmpeg-args/src/index").CommandOptions & import("lib/Command").Options>} [ffmpegOptions]
    * @prop {string} [fileExtension="mp4"]
    * @prop {boolean} probe
    */
